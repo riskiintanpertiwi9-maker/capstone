@@ -1,0 +1,21 @@
+﻿# Python cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtual environment saja
+venv/
+.venv/
+env/
+
+# IDE dan sistem operasi
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# File rahasia
+.env
+.env.*
+!.env.example

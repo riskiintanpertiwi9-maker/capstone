@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tentang MoldGuard — Deteksi Jamur Berbasis AI</title>
+  <meta name="description" content="Tentang MoldGuard: sistem deteksi dan klasifikasi jamur dinding menggunakan YOLOv8 dan MobileNetV2 sebagai proyek capstone informatika." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+  <!-- ══ NAVBAR ══ -->
+  <nav class="navbar" role="navigation" aria-label="Navigasi utama">
+    <div class="nav-inner">
+      <a href="{{ url_for('beranda') }}" class="nav-logo">
+        <div class="nav-logo-icon">🍃</div>
+        <span class="nav-logo-text">Mold<span>Guard</span></span>
+      </a>
+      <div class="nav-links">
+        <a href="{{ url_for('beranda') }}"  class="nav-link">Beranda</a>
+        <a href="{{ url_for('deteksi') }}"  class="nav-link">Deteksi Jamur</a>
+        <a href="{{ url_for('tentang') }}"  class="nav-link active">Tentang</a>
+      </div>
+      <a href="{{ url_for('deteksi') }}" class="btn-nav">🔍 Mulai Pemeriksaan</a>
+      <button class="hamburger" id="hamburger" aria-label="Buka menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="mobile-nav" id="mobile-nav" aria-hidden="true">
+      <a href="{{ url_for('beranda') }}"  class="nav-link">Beranda</a>
+      <a href="{{ url_for('deteksi') }}"  class="nav-link">Deteksi Jamur</a>
+      <a href="{{ url_for('tentang') }}"  class="nav-link active">Tentang</a>
+      <a href="{{ url_for('deteksi') }}" class="btn-nav">🔍 Mulai Pemeriksaan</a>
+    </div>
+  </nav>
+
+  <!-- ══ PAGE HEADER ══ -->
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div class="page-header-label">Informasi Proyek</div>
+      <h1>Tentang MoldGuard</h1>
+      <p>Sistem deteksi dan klasifikasi jamur dinding berbasis hybrid deep learning.</p>
+    </div>
+  </div>
+
+  <!-- ══ TENTANG LAYOUT ══ -->
+  <main class="tentang-layout" id="main-content">
+
+    <!-- Judul Proyek -->
+    <div class="tentang-card">
+      <h2>🎓 Judul Proyek Capstone</h2>
+      <div class="judul-proyek-box">
+        <div class="judul-proyek-label">Judul Resmi</div>
+        <div class="judul-proyek-text">
+          "Implementasi Metode Hybrid Deep Learning Menggunakan YOLOv8 dan MobileNetV2
+          untuk Deteksi dan Klasifikasi Jamur Dinding Berbasis Citra Digital"
+        </div>
+      </div>
+      <p style="margin-top:14px;">
+        Proyek ini merupakan proyek capstone Informatika yang mengembangkan sistem pemeriksaan visual
+        berbasis kecerdasan buatan untuk membantu pengguna mengenali indikasi jamur pada dinding bangunan.
+      </p>
+    </div>
+
+    <!-- Pengertian & Tujuan -->
+    <div class="tentang-card">
+      <h2>🎯 Tujuan Pengembangan</h2>
+      <p>
+        MoldGuard dikembangkan untuk membantu masyarakat umum dalam melakukan pemeriksaan awal kondisi
+        dinding menggunakan foto digital. Sistem ini bukan pengganti pemeriksaan profesional, melainkan
+        alat bantu yang dapat digunakan secara mandiri menggunakan ponsel.
+      </p>
+      <p>Secara spesifik, MoldGuard bertujuan untuk:</p>
+      <ul class="limit-list" style="margin-top:10px;">
+        <li class="limit-item"><span class="limit-icon">✅</span>Membantu pengguna memeriksa foto dinding untuk menemukan indikasi visual jamur.</li>
+        <li class="limit-item"><span class="limit-icon">✅</span>Mendeteksi lokasi area yang diduga berjamur menggunakan YOLOv8 (object detection).</li>
+        <li class="limit-item"><span class="limit-icon">✅</span>Mengklasifikasikan kondisi gambar menggunakan MobileNetV2 (image classification).</li>
+        <li class="limit-item"><span class="limit-icon">✅</span>Menyajikan panduan penanganan dan pencegahan langsung pada halaman hasil pemeriksaan.</li>
+        <li class="limit-item"><span class="limit-icon">✅</span>Membantu pengguna memahami kapan kondisi dapat ditangani sendiri dan kapan memerlukan bantuan profesional.</li>
+      </ul>
+    </div>
+
+    <!-- Teknologi -->
+    <div class="tentang-card">
+      <h2>⚙️ Teknologi yang Digunakan</h2>
+      <p>
+        MoldGuard menggunakan pendekatan <strong>hybrid deep learning</strong> yang menggabungkan dua model
+        dengan peran yang saling melengkapi dalam satu pipeline analisis.
+      </p>
+      <div class="tech-grid">
+        <div class="tech-item">
+          <div class="tech-item-name">🎯 YOLOv8 (Ultralytics)</div>
+          <div class="tech-item-desc">
+            Digunakan untuk <strong>object detection</strong> — mendeteksi lokasi dan menandai area spesifik
+            pada gambar yang memiliki pola sesuai kelas yang dilatih (mold, clean, suspected).
+            Menghasilkan bounding box dan skor keyakinan per deteksi.
+          </div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-name">📱 MobileNetV2 (PyTorch)</div>
+          <div class="tech-item-desc">
+            Digunakan untuk <strong>image classification</strong> — mengklasifikasikan keseluruhan gambar
+            ke dalam kelas yang telah dilatih. MobileNetV2 dipilih karena ringan dan efisien untuk
+            inferensi pada perangkat dengan sumber daya terbatas.
+          </div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-name">🐍 Flask (Python)</div>
+          <div class="tech-item-desc">
+            Framework web backend untuk menangani routing, pemrosesan gambar, dan komunikasi
+            antara antarmuka pengguna dengan model AI.
+          </div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-name">🌐 HTML / CSS / JavaScript</div>
+          <div class="tech-item-desc">
+            Antarmuka pengguna dibangun dengan teknologi web standar tanpa framework frontend
+            tambahan agar ringan dan kompatibel dengan berbagai perangkat.
+          </div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-name">🖼️ OpenCV</div>
+          <div class="tech-item-desc">
+            Digunakan untuk pemrosesan gambar di sisi server: membaca, mengkonversi format,
+            dan menghasilkan gambar anotasi dari hasil deteksi YOLO.
+          </div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-item-name">📊 scikit-learn</div>
+          <div class="tech-item-desc">
+            Digunakan dalam pipeline evaluasi model untuk menghitung metrik akurasi, F1-score,
+            precision, recall, dan confusion matrix.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alur Kerja Sistem -->
+    <div class="tentang-card">
+      <h2>🔄 Alur Kerja Sistem</h2>
+      <p>Berikut adalah alur kerja dari input foto hingga hasil prediksi yang ditampilkan kepada pengguna.</p>
+      <div class="alur-list">
+        <div class="alur-item">
+          <div class="alur-num-wrap"><div class="alur-num">1</div><div class="alur-line"></div></div>
+          <div class="alur-content">
+            <div class="alur-title">Input Gambar</div>
+            <div class="alur-desc">Pengguna mengambil foto dinding langsung menggunakan kamera HP atau mengunggah file gambar dari galeri maupun komputer.</div>
+          </div>
+        </div>
+        <div class="alur-item">
+          <div class="alur-num-wrap"><div class="alur-num">2</div><div class="alur-line"></div></div>
+          <div class="alur-content">
+            <div class="alur-title">Validasi &amp; Pengiriman</div>
+            <div class="alur-desc">File gambar divalidasi (format, ukuran) di sisi frontend sebelum dikirim ke server melalui endpoint POST /predict.</div>
+          </div>
+        </div>
+        <div class="alur-item">
+          <div class="alur-num-wrap"><div class="alur-num">3</div><div class="alur-line"></div></div>
+          <div class="alur-content">
+            <div class="alur-title">Deteksi YOLOv8</div>
+            <div class="alur-desc">Model YOLOv8 menjalankan inferensi pada gambar dan mengidentifikasi lokasi area yang sesuai dengan kelas yang telah dilatih, beserta skor keyakinan dan koordinat bounding box.</div>
+          </div>
+        </div>
+        <div class="alur-item">
+          <div class="alur-num-wrap"><div class="alur-num">4</div><div class="alur-line"></div></div>
+          <div class="alur-content">
+            <div class="alur-title">Klasifikasi MobileNetV2</div>
+            <div class="alur-desc">Gambar yang sama diproses secara paralel oleh MobileNetV2 untuk menghasilkan distribusi probabilitas kelas, melengkapi hasil deteksi YOLO.</div>
+          </div>
+        </div>
+        <div class="alur-item">
+          <div class="alur-num-wrap"><div class="alur-num">5</div><div class="alur-line"></div></div>
+          <div class="alur-content">
+            <div class="alur-title">Penentuan Status</div>
+            <div class="alur-desc">Sistem menggabungkan hasil kedua model untuk menentukan status pemeriksaan: Indikasi Terdeteksi, Tidak Ditemukan Indikasi, atau Hasil Tidak Meyakinkan.</div>
+          </div>
+        </div>
+        <div class="alur-item">
+          <div class="alur-num-wrap"><div class="alur-num">6</div><div class="alur-line"></div></div>
+          <div class="alur-content">
+            <div class="alur-title">Tampilan Hasil</div>
+            <div class="alur-desc">Halaman hasil menampilkan foto asli, foto dengan anotasi, hasil per model, penjelasan, panduan penanganan yang disesuaikan dengan status, tips pencegahan, dan peringatan keselamatan — seluruhnya dalam satu halaman.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Batasan Sistem -->
+    <div class="tentang-card">
+      <h2>⚠️ Batasan Sistem</h2>
+      <p>
+        MoldGuard adalah alat bantu pemeriksaan visual berbasis citra. Penting untuk memahami
+        keterbatasan sistem ini sebelum menggunakannya:
+      </p>
+      <div class="limit-list" style="margin-top:14px;">
+        <div class="limit-item">
+          <span class="limit-icon">🔍</span>
+          <span>Model hanya dapat menganalisis apa yang terlihat pada gambar. Jamur di balik dinding, di dalam plafon, atau di area yang tidak terfoto tidak dapat dideteksi.</span>
+        </div>
+        <div class="limit-item">
+          <span class="limit-icon">📷</span>
+          <span>Kualitas prediksi sangat dipengaruhi oleh kualitas gambar: pencahayaan, ketajaman fokus, sudut pengambilan, dan resolusi foto.</span>
+        </div>
+        <div class="limit-item">
+          <span class="limit-icon">🧬</span>
+          <span>Model tidak dapat mengidentifikasi spesies jamur secara pasti. Klasifikasi yang diberikan hanya berdasarkan pola visual yang dipelajari dari dataset pelatihan.</span>
+        </div>
+        <div class="limit-item">
+          <span class="limit-icon">🏥</span>
+          <span>Hasil pemeriksaan ini bukan diagnosis medis atau bangunan yang sah. Untuk kondisi yang serius atau memengaruhi kesehatan, konsultasikan dengan profesional terkait.</span>
+        </div>
+        <div class="limit-item">
+          <span class="limit-icon">📊</span>
+          <span>Performa model bergantung pada kualitas dan cakupan dataset pelatihan. Model mungkin kurang akurat untuk kondisi dinding yang berbeda dari data pelatihan.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div style="text-align:center; padding: 20px 0 8px;">
+      <p style="font-size:.9rem;color:var(--text-muted);margin-bottom:20px;">
+        Sudah memahami cara kerja MoldGuard? Mulai periksa dinding Anda sekarang.
+      </p>
+      <a href="{{ url_for('deteksi') }}" class="btn btn-primary btn-lg">🔬 Mulai Pemeriksaan</a>
+    </div>
+
+  </main>
+
+  <!-- ══ FOOTER ══ -->
+  <footer class="footer" role="contentinfo">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="{{ url_for('beranda') }}" class="footer-logo">
+          <div class="footer-logo-icon">🍃</div> MoldGuard
+        </a>
+        <p class="footer-desc">Alat bantu pemeriksaan visual jamur dinding berbasis AI.</p>
+        <p class="footer-disclaimer">Hasil adalah prediksi berbasis citra, bukan diagnosis profesional.</p>
+      </div>
+      <div>
+        <p class="footer-heading">Navigasi</p>
+        <ul class="footer-links">
+          <li><a href="{{ url_for('beranda') }}">Beranda</a></li>
+          <li><a href="{{ url_for('deteksi') }}">Deteksi Jamur</a></li>
+          <li><a href="{{ url_for('tentang') }}">Tentang</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="footer-heading">Teknologi</p>
+        <ul class="footer-links">
+          <li><a href="https://github.com/ultralytics/ultralytics" target="_blank" rel="noopener">YOLOv8 — Ultralytics</a></li>
+          <li><a href="https://pytorch.org/" target="_blank" rel="noopener">PyTorch</a></li>
+          <li><a href="https://flask.palletsprojects.com/" target="_blank" rel="noopener">Flask</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>MoldGuard &copy; 2024 — Proyek Capstone Informatika — Bukan pengganti pemeriksaan profesional.</p>
+    </div>
+  </footer>
+
+  <script>
+    const hamburger = document.getElementById('hamburger');
+    const mobileNav = document.getElementById('mobile-nav');
+    hamburger.addEventListener('click', () => {
+      const open = hamburger.classList.toggle('open');
+      mobileNav.classList.toggle('open', open);
+      hamburger.setAttribute('aria-expanded', String(open));
+      mobileNav.setAttribute('aria-hidden', String(!open));
+    });
+  </script>
+
+</body>
+</html>

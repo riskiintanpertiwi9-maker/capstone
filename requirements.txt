@@ -1,0 +1,26 @@
+# MoldGuard — Python Dependencies
+# Install: pip install -r requirements.txt
+
+# ── Web Framework ──────────────────────────────────────────────────────────────
+Flask>=3.0.0
+Werkzeug>=3.0.0
+
+# ── Computer Vision ────────────────────────────────────────────────────────────
+opencv-python>=4.8.0
+Pillow>=10.0.0
+
+# ── Deep Learning (opsional, install saat model tersedia) ─────────────────────
+# torch>=2.1.0
+# torchvision>=0.16.0
+# ultralytics>=8.0.0
+
+# ── Data & Utilities ───────────────────────────────────────────────────────────
+numpy>=1.24.0
+PyYAML>=6.0
+
+# ── Untuk training & evaluasi (tidak wajib untuk menjalankan web) ─────────────
+# scikit-learn>=1.3.0
+# matplotlib>=3.7.0
+# seaborn>=0.12.0
+# tqdm>=4.66.0
+# pandas>=2.0.0
