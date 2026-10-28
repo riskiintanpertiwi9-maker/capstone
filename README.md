@@ -7,40 +7,45 @@
 ## 📁 Struktur Proyek
 
 ```
-MoldGuard/
-│
-├── .venv/                      # Virtual environment Python
+D:\capstone\
 │
 ├── datasets/
-│   ├── yolo/                   # Dataset untuk YOLOv8
-│   │   ├── images/{train,val,test}/
-│   │   ├── labels/{train,val,test}/
+│   ├── trained/                # Dataset yang benar-benar dipakai model deployed
+│   │   ├── yolo/               # 72 train / 18 val + label YOLO
+│   │   │   ├── images/{train,val}/
+│   │   │   └── labels/{train,val}/
+│   │   ├── classifier/         # 9 kelas, 72 train / 18 val
+│   │   │   ├── train/<kelas>/
+│   │   │   └── val/<kelas>/
 │   │   └── data.yaml           # Konfigurasi dataset YOLO
 │   │
-│   └── classification/         # Dataset untuk MobileNetV2
-│       ├── train/
-│       ├── val/
-│       └── test/
+│   ├── yolo/                   # Dataset besar (perlu `git lfs pull`)
+│   └── classification/         # Dataset besar 5 kelas (perlu `git lfs pull`)
 │
 ├── models/
-│   ├── yolo/                   # Model YOLO tersimpan
-│   └── mobilenet/              # best.pth tersimpan
+│   └── mobilenet/
+│       ├── mobilenet_mold.h5            # Checkpoint Keras MobileNetV2
+│       └── mobilenet_mold.labels.json   # Urutan 9 nama kelas
 │
 ├── src/
 │   ├── train_yolo.py           # Training YOLOv8
-│   ├── train_mobilenet.py      # Training MobileNetV2
-│   ├── predict.py              # Inference / prediksi
-│   └── evaluate.py             # Evaluasi model
+│   ├── train_mobilenet_keras.py# Training MobileNetV2 (Keras, sesuai model deployed)
+│   ├── train_mobilenet.py      # Alternatif training MobileNetV2 (PyTorch)
+│   ├── predict.py              # Inference / prediksi (.h5 & .pth)
+│   └── evaluate.py             # Evaluasi model (.h5 & .pth)
 │
 ├── results/
-│   ├── yolo/                   # Hasil training & evaluasi YOLO
-│   └── mobilenet/              # Hasil training & evaluasi MobileNet
+│   ├── yolo/train/             # weights/best.pt + metrik & plot training
+│   └── mobilenet/train/        # best.keras + metrik & plot training
+│
+├── utils/
+│   └── class_names.py          # Sidecar label kelas classifier
 │
 ├── web/
 │   ├── app.py                  # Flask web application
-│   ├── templates/index.html    # Halaman utama
+│   ├── templates/              # beranda, deteksi, hasil, tentang
 │   └── static/
-│       ├── css/style.css
+│       ├── css/style.css       # Tema hijau (moss green)
 │       ├── js/script.js
 │       └── uploads/            # Gambar yang diunggah
 │
@@ -76,18 +81,19 @@ pip install -r requirements.txt
 
 ---
 
-## 🗂️ Persiapan Dataset
+## 🗂️ Dataset
 
-### Dataset YOLO (Object Detection)
+Model yang dideploy dilatih dengan dataset di `datasets/trained/`:
 
-Letakkan gambar dan label di:
 ```
-datasets/yolo/images/train/   ← gambar training
-datasets/yolo/images/val/     ← gambar validasi
-datasets/yolo/images/test/    ← gambar testing
-datasets/yolo/labels/train/   ← label .txt (format YOLO)
-datasets/yolo/labels/val/
-datasets/yolo/labels/test/
+datasets/trained/
+├── yolo/                       # 72 gambar train / 18 val
+│   ├── images/{train,val}/
+│   └── labels/{train,val}/
+├── classifier/                 # 9 kelas, 72 train / 18 val
+│   ├── train/<kelas>/
+│   └── val/<kelas>/
+└── data.yaml                   # nc=1, names=['mold']
 ```
 
 Format label YOLO (`class_id cx cy w h`, semua ternormalisasi 0–1):
@@ -95,22 +101,8 @@ Format label YOLO (`class_id cx cy w h`, semua ternormalisasi 0–1):
 0 0.512 0.483 0.234 0.312
 ```
 
-Edit `datasets/yolo/data.yaml` jika ingin menambah/mengubah kelas.
-
-### Dataset Klasifikasi (MobileNetV2)
-
-Struktur folder `ImageFolder` PyTorch:
-```
-datasets/classification/
-├── train/
-│   ├── clean/
-│   ├── mold/
-│   └── suspected/
-├── val/
-│   └── ...
-└── test/
-    └── ...
-```
+`datasets/yolo/` dan `datasets/classification/` adalah dataset besar (5 kelas)
+yang filenya disimpan via Git LFS. Jalankan `git lfs pull` bila ingin memakainya.
 
 ---
 
@@ -119,37 +111,37 @@ datasets/classification/
 ### YOLOv8
 
 ```bash
-python src/train_yolo.py \
-  --model yolov8n.pt \
-  --epochs 100 \
-  --imgsz 640 \
-  --batch 16
+python src/train_yolo.py --epochs 15 --imgsz 416 --batch 8
 ```
 
-| Argumen   | Default                     | Keterangan              |
-|-----------|-----------------------------|-------------------------|
-| `--model` | `yolov8n.pt`                | Pretrained backbone      |
-| `--epochs`| 100                         | Jumlah epoch            |
-| `--imgsz` | 640                         | Ukuran input gambar     |
-| `--batch` | 16                          | Batch size              |
-| `--device`| auto                        | `cuda` atau `cpu`       |
+Default diarahkan ke `datasets/trained/data.yaml` dan output `results/yolo/train/`.
 
-### MobileNetV2
+| Argumen   | Default                        | Keterangan              |
+|-----------|--------------------------------|-------------------------|
+| `--model` | `yolov8n.pt`                   | Pretrained backbone     |
+| `--epochs`| 15                             | Jumlah epoch (hemat CPU)|
+| `--imgsz` | 416                            | Ukuran input gambar     |
+| `--batch` | 8                              | Batch size              |
+| `--device`| auto                           | `cuda` atau `cpu`       |
+| `--cache` | `none`                         | `ram`/`disk` untuk cepat|
+
+### MobileNetV2 (Keras — model yang dipakai web)
 
 ```bash
-python src/train_mobilenet.py \
-  --epochs 30 \
-  --batch 32 \
-  --lr 1e-3
+python src/train_mobilenet_keras.py --epochs 15 --batch 8
 ```
 
-| Argumen      | Default                        | Keterangan              |
-|--------------|--------------------------------|-------------------------|
-| `--epochs`   | 30                             | Jumlah epoch            |
-| `--batch`    | 32                             | Batch size              |
-| `--lr`       | 1e-3                           | Learning rate           |
-| `--freeze`   | False                          | Freeze backbone layers  |
-| `--model_out`| `models/mobilenet/best.pth`    | Path simpan model       |
+| Argumen      | Default                                    | Keterangan              |
+|--------------|--------------------------------------------|-------------------------|
+| `--epochs`   | 15                                         | Jumlah epoch            |
+| `--batch`    | 8                                          | Batch size              |
+| `--lr`       | 1e-4                                       | Learning rate           |
+| `--data`     | `datasets/trained/classifier`              | Folder train/ val/      |
+| `--labels`   | `models/mobilenet/mobilenet_mold.labels.json` | Sidecar urutan kelas |
+| `--output`   | `models/mobilenet/mobilenet_mold.h5`       | Checkpoint hasil training|
+| `--eval-only`| -                                          | Evaluasi tanpa training |
+
+Metrik & plot tersimpan di `results/mobilenet/train_run/`.
 
 ---
 
@@ -166,7 +158,7 @@ python src/predict.py --source gambar.jpg --mode mobilenet
 python src/predict.py --source gambar.jpg --mode both --save
 
 # Seluruh folder
-python src/predict.py --source datasets/yolo/images/test --mode both --save
+python src/predict.py --source datasets/trained/yolo/images/val --mode both --save
 ```
 
 ---
@@ -191,37 +183,65 @@ Hasil evaluasi disimpan di `results/yolo/` dan `results/mobilenet/`.
 ## 🌐 Web Application
 
 ```bash
-cd web
-python app.py
+python web/app.py
 ```
 
 Buka browser: **http://127.0.0.1:5000**
 
+Backend memuat:
+- `results/yolo/train/weights/best.pt` (YOLOv8, 1 kelas `mold`)
+- `models/mobilenet/mobilenet_mold.h5` + sidecar label (Keras, 9 kelas)
+
 Fitur:
 - 📁 Drag & drop upload gambar
-- 🎯 Pilih mode: YOLO / MobileNet / Keduanya
-- 🎚️ Atur confidence threshold
-- 📊 Visualisasi hasil deteksi real-time
+- 🎯 Deteksi area jamur dengan YOLO
+- 🧪 Klasifikasi spesies dari crop area jamur dengan MobileNetV2
+- 📊 Visualisasi bounding box + probabilitas tiap kelas
 
 ---
 
-## 📈 Kelas Default
+## 📈 Kelas Dataset
 
-| ID | Nama       | Deskripsi                |
-|----|------------|--------------------------|
-| 0  | `mold`     | Terdeteksi ada jamur     |
-| 1  | `clean`    | Bersih / bebas jamur     |
-| 2  | `suspected`| Dicurigai ada jamur      |
+### Deteksi (YOLOv8) — 1 kelas
+| ID | Nama | Deskripsi |
+|----|------|-----------|
+| 0  | `mold` | Area jamur pada dinding |
+
+### Klasifikasi (MobileNetV2) — 9 kelas
+| ID | Nama |
+|----|------|
+| 0  | `Alternaria spp` |
+| 1  | `Aspergillus` |
+| 2  | `Chaetomium globosum` |
+| 3  | `Cladosporium spp` |
+| 4  | `Normal Wall` |
+| 5  | `Penicillium chrysogenum` |
+| 6  | `Stachybotrys chartarum` |
+| 7  | `Trichoderma spp` |
+| 8  | `Wallemia spp` |
+
+> Status web (`mold_detected` / `no_mold` / `uncertain`) ditentukan dari
+> deteksi YOLO dan prediksi MobileNet. `Normal Wall` dengan confidence > 0.5
+> dianggap bersih; kelas jamur lain dengan confidence > 0.5 dianggap jamur.
+
+### Hasil training (model deployed)
+
+**YOLOv8** — `results/yolo/train/metrics_summary.json`
+- mAP@0.5: **0.995**
+
+**MobileNetV2** — `results/mobilenet/train/metrics_val.json`
+- Validation accuracy: **0.8333** (18 gambar val)
 
 ---
 
 ## 🛠️ Tech Stack
 
 - **YOLOv8** — Ultralytics (Object Detection)
-- **MobileNetV2** — PyTorch + TorchVision (Classification)
+- **MobileNetV2** — TensorFlow / Keras (Classification)
 - **Flask** — Web backend
 - **OpenCV** — Image processing
 - **scikit-learn** — Metrics & evaluation
+- **PyTorch** — Alternatif training classifier
 
 ---
 

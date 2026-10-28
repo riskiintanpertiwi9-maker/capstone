@@ -9,6 +9,15 @@ import os
 import time
 from pathlib import Path
 
+# Root proyek: D:\capstone (dua level di atas file ini).
+BASE_DIR = Path(__file__).resolve().parent.parent
+CACHE_DIR = BASE_DIR / ".cache"
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+# Arahkan cache Torch/Matplotlib ke drive D:.
+os.environ.setdefault("TORCH_HOME", str(CACHE_DIR / "torch"))
+os.environ.setdefault("MPLCONFIGDIR", str(CACHE_DIR / "matplotlib"))
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -30,12 +39,13 @@ def parse_args():
         description="Train MobileNetV2 for MoldGuard Classification"
     )
     parser.add_argument(
-        "--data_dir", type=str, default="datasets/classification"
+        "--data_dir", type=str,
+        default=str(BASE_DIR / "datasets" / "classification")
     )
     parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--batch", type=int, default=8)
     parser.add_argument("--lr", type=float, default=1e-3)
-    parser.add_argument("--imgsz", type=int, default=160)
+    parser.add_argument("--imgsz", type=int, default=224)
     parser.add_argument("--workers", type=int, default=0)
     parser.add_argument(
         "--freeze",
@@ -48,10 +58,12 @@ def parse_args():
         help="Jangan gunakan bobot ImageNet pretrained"
     )
     parser.add_argument(
-        "--save_dir", type=str, default="results/mobilenet"
+        "--save_dir", type=str,
+        default=str(BASE_DIR / "results" / "mobilenet")
     )
     parser.add_argument(
-        "--model_out", type=str, default="models/mobilenet/best.pth"
+        "--model_out", type=str,
+        default=str(BASE_DIR / "models" / "mobilenet" / "best.pth")
     )
     return parser.parse_args()
 

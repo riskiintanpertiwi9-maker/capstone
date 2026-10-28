@@ -1,10 +1,10 @@
-﻿from pathlib import Path
+from pathlib import Path
 from collections import Counter
 import shutil
 
 source = Path.home() / "Downloads" / "Wall Defects Final.v3i.yolov8"
-destination = Path(r"D:\MoldGuard\datasets\yolo")
-temporary = Path(r"D:\MoldGuard\datasets\yolo_rebuild_tmp")
+destination = Path(r"D:\capstone\datasets\yolo")
+temporary = Path(r"D:\capstone\datasets\yolo_rebuild_tmp")
 
 if not all((source / s / sub).is_dir()
            for s in ["train", "valid", "test"]
@@ -93,7 +93,7 @@ if errors:
     raise SystemExit("Perbaiki sumber sebelum mengganti dataset kerja.")
 
 (temporary / "data.yaml").write_text(
-    "path: D:/MoldGuard/datasets/yolo\n"
+    "path: D:/capstone/datasets/yolo\n"
     "train: images/train\n"
     "val: images/val\n"
     "test: images/test\n"
@@ -103,7 +103,7 @@ if errors:
 )
 
 # Dataset kerja lama baru diganti setelah seluruh proses validasi berhasil.
-backup = Path(r"D:\MoldGuard\datasets\yolo_backup")
+backup = Path(r"D:\capstone\datasets\yolo_backup")
 if backup.exists():
     raise SystemExit(
         f"Backup sudah ada: {backup}. Dataset lama tidak diganti."

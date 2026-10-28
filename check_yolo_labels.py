@@ -2,7 +2,7 @@
 from pathlib import Path
 from collections import Counter
 
-ROOT = Path(r"D:\MoldGuard\datasets\yolo")
+ROOT = Path(r"D:\capstone\datasets\yolo")
 errors = []
 counts = Counter()
 

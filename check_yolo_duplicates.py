@@ -3,7 +3,7 @@ from pathlib import Path
 from collections import defaultdict
 import hashlib
 
-ROOT = Path(r"D:\MoldGuard\datasets\yolo")
+ROOT = Path(r"D:\capstone\datasets\yolo")
 SPLITS = ("train", "val", "test")
 EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 

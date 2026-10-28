@@ -1,0 +1,7 @@
+# Dataset yang benar-benar dipakai untuk melatih model yang dideploy.
+# Salinan dari pipeline training (72 train / 18 val). Semua berada di drive D:.
+path: D:/capstone/datasets/trained/yolo
+train: images/train
+val: images/val
+nc: 1
+names: ['mold']

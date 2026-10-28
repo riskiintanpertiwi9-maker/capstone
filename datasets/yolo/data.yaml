@@ -1,4 +1,4 @@
-path: D:/MoldGuard/datasets/yolo
+path: D:/capstone/datasets/yolo
 train: images/train
 val: images/val
 test: images/test

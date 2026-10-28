@@ -213,8 +213,8 @@
       panduan_sub:   'Panduan untuk mengaktifkan kemampuan analisis AI.',
       panduan_steps: [
         { bold:'Latih model YOLOv8:', text:'jalankan python src/train_yolo.py setelah dataset disiapkan di datasets/yolo/' },
-        { bold:'Latih model MobileNetV2:', text:'jalankan python src/train_mobilenet.py setelah dataset disiapkan di datasets/classification/' },
-        { bold:'Pastikan bobot model tersimpan', text:'di results/yolo/train/weights/best.pt dan models/mobilenet/best.pth' },
+        { bold:'Latih model MobileNetV2:', text:'jalankan python src/train_mobilenet_keras.py setelah dataset disiapkan di datasets/trained/classifier/' },
+        { bold:'Pastikan bobot model tersimpan', text:'di results/yolo/train/weights/best.pt dan models/mobilenet/mobilenet_mold.h5' },
         { bold:'Restart server Flask', text:'agar model dimuat ulang. Server akan otomatis mendeteksi ketersediaan model.' },
       ],
     },

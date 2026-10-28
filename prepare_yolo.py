@@ -1,7 +1,7 @@
 
 from pathlib import Path
 
-ROOT = Path(r"D:\MoldGuard\datasets\yolo")
+ROOT = Path(r"D:\capstone\datasets\yolo")
 SPLITS = ["train", "val", "test"]
 
 for split in SPLITS:

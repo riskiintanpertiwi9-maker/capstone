@@ -5,9 +5,22 @@ Script untuk melatih model deteksi jamur menggunakan YOLOv8.
 """
 
 import argparse
+import os
 from pathlib import Path
 
 import yaml
+
+# Root proyek: D:\capstone (dua level di atas file ini).
+BASE_DIR = Path(__file__).resolve().parent.parent
+CACHE_DIR = BASE_DIR / ".cache"
+for _sub in ("ultralytics", "ultralytics/Ultralytics", "keras", "torch", "matplotlib"):
+    (CACHE_DIR / _sub).mkdir(parents=True, exist_ok=True)
+
+# Arahkan cache Ultralytics/Torch/Matplotlib ke drive D:.
+os.environ.setdefault("YOLO_CONFIG_DIR", str(CACHE_DIR / "ultralytics"))
+os.environ.setdefault("TORCH_HOME", str(CACHE_DIR / "torch"))
+os.environ.setdefault("MPLCONFIGDIR", str(CACHE_DIR / "matplotlib"))
+
 from ultralytics import YOLO
 
 
@@ -18,11 +31,11 @@ def parse_args():
     parser.add_argument("--model", type=str, default="yolov8n.pt",
                         help="Pretrained model")
     parser.add_argument("--data", type=str,
-                        default=r"D:\MoldGuard\datasets\yolo\data.yaml",
+                        default=str(BASE_DIR / "datasets" / "trained" / "data.yaml"),
                         help="Path to data.yaml")
-    parser.add_argument("--epochs", type=int, default=25,
-                        help="Number of training epochs")
-    parser.add_argument("--imgsz", type=int, default=512,
+    parser.add_argument("--epochs", type=int, default=15,
+                        help="Number of training epochs (default 15, hemat waktu CPU)")
+    parser.add_argument("--imgsz", type=int, default=416,
                         help="Input image size")
     parser.add_argument("--batch", type=int, default=4,
                         help="Batch size")
@@ -31,12 +44,19 @@ def parse_args():
     parser.add_argument("--workers", type=int, default=2,
                         help="Number of dataloader workers")
     parser.add_argument("--project", type=str,
-                        default=r"D:\MoldGuard\runs\detect",
+                        default=str(BASE_DIR / "results" / "yolo"),
                         help="Folder for training results")
-    parser.add_argument("--name", type=str, default="mold_yolov8n",
+    parser.add_argument("--name", type=str, default="train",
                         help="Experiment name")
     parser.add_argument("--patience", type=int, default=5,
                         help="Early stopping patience")
+    parser.add_argument("--fraction", type=float, default=1.0,
+                        help="Fraksi dataset yang dipakai (0-1), berguna untuk uji cepat")
+    parser.add_argument("--cache", type=str, default="none",
+                        choices=["none", "ram", "disk"],
+                        help="Cache gambar agar epoch berikutnya lebih cepat")
+    parser.add_argument("--lr0", type=float, default=None,
+                        help="Learning rate awal (mis. 0.001 untuk fine-tuning)")
     return parser.parse_args()
 
 
@@ -74,6 +94,10 @@ def train(args):
         project=args.project,
         name=args.name,
         patience=args.patience,
+        exist_ok=True,
+        fraction=args.fraction,
+        cache=False if args.cache == "none" else args.cache,
+        lr0=args.lr0 if args.lr0 else 0.01,
         save=True,
         plots=True,
         verbose=True,

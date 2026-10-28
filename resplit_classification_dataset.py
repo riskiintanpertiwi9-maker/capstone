@@ -5,7 +5,7 @@ import shutil
 from collections import defaultdict
 from pathlib import Path
 
-BASE = Path(r"D:\MoldGuard\datasets\classification")
+BASE = Path(r"D:\capstone\datasets\classification")
 CSV_FILE = BASE / "moldvision_database.csv"
 RAW = BASE / "raw_images"
 SEED = 42

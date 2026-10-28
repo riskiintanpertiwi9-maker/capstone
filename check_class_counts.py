@@ -1,7 +1,7 @@
 
 from pathlib import Path
 
-BASE = Path(r"D:\MoldGuard\datasets\classification")
+BASE = Path(r"D:\capstone\datasets\classification")
 SPLITS = ["train", "val", "test"]
 
 total_all = 0

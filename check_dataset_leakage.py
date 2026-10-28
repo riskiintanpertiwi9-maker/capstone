@@ -3,7 +3,7 @@ from collections import defaultdict
 from pathlib import Path
 import csv
 
-BASE = Path(r"D:\MoldGuard\datasets\classification")
+BASE = Path(r"D:\capstone\datasets\classification")
 CSV_FILE = BASE / "moldvision_database.csv"
 RAW = BASE / "raw_images"
 

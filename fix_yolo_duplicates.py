@@ -4,8 +4,8 @@ from collections import defaultdict
 import hashlib
 import shutil
 
-ROOT = Path(r"D:\MoldGuard\datasets\yolo")
-QUARANTINE = Path(r"D:\MoldGuard\datasets\yolo_duplicates_quarantine")
+ROOT = Path(r"D:\capstone\datasets\yolo")
+QUARANTINE = Path(r"D:\capstone\datasets\yolo_duplicates_quarantine")
 PRIORITY = {"test": 0, "val": 1, "train": 2}
 EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 

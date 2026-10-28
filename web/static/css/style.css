@@ -751,7 +751,7 @@ h1,h2,h3,h4 { line-height: 1.25; color: var(--text-primary); font-weight: 700; }
   font-size: 0.85rem;
   font-weight: 500;
 }
-.camera-status.info    { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.camera-status.info    { background: var(--green-50); color: var(--moss-dark); border: 1px solid var(--green-200); }
 .camera-status.error   { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger-border); }
 .camera-status.warning { background: var(--warning-light); color: var(--warning); border: 1px solid var(--warning-border); }
 #camera-photo-preview { display: none; width: 100%; border-radius: var(--r-lg); object-fit: contain; max-height: 340px; }
@@ -896,8 +896,8 @@ h1,h2,h3,h4 { line-height: 1.25; color: var(--text-primary); font-weight: 700; }
   border-color: var(--warning-border);
 }
 .status-banner.model_unavailable {
-  background: #f0f9ff;
-  border-color: #bae6fd;
+  background: var(--green-50);
+  border-color: var(--green-200);
 }
 .status-icon { font-size: 2.4rem; flex-shrink: 0; line-height: 1; }
 .status-text-wrap { flex: 1; }
@@ -1111,15 +1111,15 @@ h1,h2,h3,h4 { line-height: 1.25; color: var(--text-primary); font-weight: 700; }
 
 /* AI disclaimer */
 .ai-disclaimer {
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
+  background: var(--green-50);
+  border: 1px solid var(--green-200);
   border-radius: var(--r-lg);
   padding: 16px 20px;
   display: flex;
   gap: 10px;
   align-items: flex-start;
   font-size: 0.85rem;
-  color: #0c4a6e;
+  color: var(--moss-darker);
   margin-bottom: 20px;
 }
 
@@ -1133,20 +1133,20 @@ h1,h2,h3,h4 { line-height: 1.25; color: var(--text-primary); font-weight: 700; }
 
 /* Model unavailable notice */
 .model-notice {
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
+  background: var(--green-50);
+  border: 1px solid var(--green-200);
   border-radius: var(--r-xl);
   padding: 28px;
   text-align: center;
   margin-bottom: 20px;
 }
 .model-notice-icon { font-size: 2.5rem; margin-bottom: 12px; }
-.model-notice h3 { font-size: 1.05rem; font-weight: 700; color: #075985; margin-bottom: 8px; }
-.model-notice p  { font-size: 0.9rem; color: #0369a1; line-height: 1.6; }
+.model-notice h3 { font-size: 1.05rem; font-weight: 700; color: var(--moss-dark); margin-bottom: 8px; }
+.model-notice p  { font-size: 0.9rem; color: var(--gray-600); line-height: 1.6; }
 .model-notice code {
   display: inline-block;
-  background: #e0f2fe;
-  color: #0c4a6e;
+  background: var(--green-100);
+  color: var(--moss-darker);
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 0.82rem;
