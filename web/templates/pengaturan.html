@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% set page = "pengaturan" %}
+{% set page_title = "Pengaturan" %}
+{% set page_subtitle = "Preferensi aplikasi dan data perangkat" %}
+{% block title %}Pengaturan{% endblock %}
+
+{% block content %}
+<section class="page-head page-head--split">
+  <div class="page-head__lead">
+    <h1 class="page-title">Pengaturan</h1>
+    <p class="lead">Semua preferensi disimpan otomatis di perangkat ini. Tidak ada data yang dikirim ke akun daring.</p>
+  </div>
+  <span class="badge badge--soft">{{ icon('check-circle', 13) }} Tersimpan otomatis</span>
+</section>
+
+<div class="settings-grid">
+  <section class="card" id="notifikasi" aria-labelledby="settings-notif-title">
+    <div class="card-head">
+      <div>
+        <h2 class="card-title" id="settings-notif-title">Notifikasi</h2>
+        <p class="card-sub">Mengatur apa yang tampil di panel notifikasi dalam aplikasi.</p>
+      </div>
+      <span class="tile tile--mint">{{ icon('bell', 18) }}</span>
+    </div>
+    <div class="setting-list">
+      <div class="setting-row">
+        <span class="tile tile--mint">{{ icon('check-circle', 17) }}</span>
+        <div class="setting-row__body">
+          <strong>Hasil pemeriksaan</strong>
+          <span>Tampilkan hasil terbaru pada panel notifikasi.</span>
+        </div>
+        <button class="toggle" type="button" role="switch" aria-checked="false" data-setting="notifyResults" aria-label="Notifikasi hasil pemeriksaan">
+          <span></span>
+        </button>
+      </div>
+      <div class="setting-row">
+        <span class="tile tile--rose">{{ icon('calendar', 17) }}</span>
+        <div class="setting-row__body">
+          <strong>Pengingat mendatang</strong>
+          <span>Tampilkan agenda pengingat aktif pada panel notifikasi.</span>
+        </div>
+        <button class="toggle" type="button" role="switch" aria-checked="false" data-setting="notifyReminders" aria-label="Notifikasi pengingat mendatang">
+          <span></span>
+        </button>
+      </div>
+      <div class="setting-row">
+        <span class="tile tile--amber">{{ icon('lightbulb', 17) }}</span>
+        <div class="setting-row__body">
+          <strong>Kartu tips di Beranda</strong>
+          <span>Tampilkan artikel unggulan pada halaman Beranda.</span>
+        </div>
+        <button class="toggle" type="button" role="switch" aria-checked="false" data-setting="notifyTips" aria-label="Kartu tips di Beranda">
+          <span></span>
+        </button>
+      </div>
+    </div>
+    <p class="card-note">
+      {{ icon('info', 14) }}
+      <span>MoldGuard tidak mengirim notifikasi push saat situs ditutup. Preferensi ini hanya memengaruhi tampilan di dalam aplikasi.</span>
+    </p>
+  </section>
+
+  <section class="card" id="tampilan" aria-labelledby="settings-theme-title">
+    <div class="card-head">
+      <div>
+        <h2 class="card-title" id="settings-theme-title">Tema Tampilan</h2>
+        <p class="card-sub">Terapkan tema terang, gelap, atau ikuti pengaturan sistem.</p>
+      </div>
+      <span class="tile tile--blue">{{ icon('sun', 18) }}</span>
+    </div>
+    <div class="theme-choice" role="group" aria-label="Pilih tema">
+      <button class="theme-option" type="button" data-theme-choice="light">
+        <span class="theme-option__preview theme-option__preview--light" aria-hidden="true"></span>
+        {{ icon('sun', 16) }} <span>Terang</span>
+      </button>
+      <button class="theme-option" type="button" data-theme-choice="dark">
+        <span class="theme-option__preview theme-option__preview--dark" aria-hidden="true"></span>
+        {{ icon('moon', 16) }} <span>Gelap</span>
+      </button>
+      <button class="theme-option" type="button" data-theme-choice="system">
+        <span class="theme-option__preview theme-option__preview--system" aria-hidden="true"></span>
+        {{ icon('monitor', 16) }} <span>Sistem</span>
+      </button>
+    </div>
+    <p class="card-note">{{ icon('info', 14) }} <span>Perubahan tema langsung terlihat dan tersimpan di perangkat ini.</span></p>
+  </section>
+
+  <section class="card span-2" id="privasi" aria-labelledby="settings-privacy-title">
+    <div class="card-head">
+      <div>
+        <h2 class="card-title" id="settings-privacy-title">Privasi &amp; Data</h2>
+        <p class="card-sub">Kendali atas data yang tersimpan di browser Anda.</p>
+      </div>
+      <span class="tile tile--mint">{{ icon('shield', 18) }}</span>
+    </div>
+    <div class="setting-list">
+      <div class="setting-row">
+        <span class="tile tile--blue">{{ icon('database', 17) }}</span>
+        <div class="setting-row__body">
+          <strong>Data perangkat</strong>
+          <span id="settings-storage">Menghitung penggunaan penyimpanan…</span>
+        </div>
+        <a class="btn btn--ghost btn--sm" href="{{ url_for('riwayat') }}">Kelola</a>
+      </div>
+      <div class="setting-row">
+        <span class="tile tile--amber">{{ icon('lock', 17) }}</span>
+        <div class="setting-row__body">
+          <strong>Analisis foto</strong>
+          <span>Foto dikirim ke server MoldGuard hanya saat Anda menekan “Mulai Analisis”, lalu tidak disimpan permanen di server.</span>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="tile tile--rose">{{ icon('refresh', 17) }}</span>
+        <div class="setting-row__body">
+          <strong>Sinkronisasi akun</strong>
+          <span>Belum tersedia. Riwayat hanya ada di perangkat ini dan tidak berpindah otomatis ke perangkat lain.</span>
+        </div>
+        <span class="badge badge--warning">Belum tersedia</span>
+      </div>
+    </div>
+    <p class="card-note">{{ icon('info', 14) }} <span>Baca rincian pada <a class="inline-link" href="{{ url_for('tentang') }}#privasi">Kebijakan Privasi</a>.</span></p>
+  </section>
+
+  <section class="card" id="kamera" aria-labelledby="settings-camera-title">
+    <div class="card-head">
+      <div>
+        <h2 class="card-title" id="settings-camera-title">Izin Kamera</h2>
+        <p class="card-sub">Kamera hanya dipakai pada halaman Deteksi setelah Anda menekannya.</p>
+      </div>
+      <span class="tile tile--rose">{{ icon('camera', 18) }}</span>
+    </div>
+    <div class="setting-row setting-row--static">
+      <span class="tile tile--mint">{{ icon('eye', 17) }}</span>
+      <div class="setting-row__body">
+        <strong>Status izin browser</strong>
+        <span id="camera-permission">Belum diperiksa.</span>
+      </div>
+      <span class="badge badge--neutral" id="camera-permission-badge">—</span>
+    </div>
+    <div class="inline-actions">
+      <button class="btn btn--secondary btn--sm" id="btn-check-camera" type="button">{{ icon('refresh', 15) }} Periksa Izin</button>
+      <a class="btn btn--ghost btn--sm" href="{{ url_for('deteksi') }}">{{ icon('camera', 15) }} Buka Deteksi</a>
+    </div>
+    <p class="card-note">{{ icon('info', 14) }} <span>Izin kamera diatur oleh browser, bukan oleh MoldGuard. Jika ditolak, unggah foto dari galeri tetap tersedia.</span></p>
+  </section>
+
+  <section class="card" aria-labelledby="settings-lang-title">
+    <div class="card-head">
+      <div>
+        <h2 class="card-title" id="settings-lang-title">Bahasa</h2>
+        <p class="card-sub">Bahasa antarmuka aplikasi.</p>
+      </div>
+      <span class="tile tile--amber">{{ icon('globe', 18) }}</span>
+    </div>
+    <div class="field">
+      <label for="settings-language">Bahasa aplikasi</label>
+      <select id="settings-language" disabled>
+        <option>Bahasa Indonesia</option>
+      </select>
+      <p class="field-hint" id="lang-note">Terjemahan lain belum tersedia pada versi ini.</p>
+    </div>
+  </section>
+
+  <section class="card" id="tentang-aplikasi" aria-labelledby="settings-about-title">
+    <div class="card-head">
+      <div>
+        <h2 class="card-title" id="settings-about-title">Tentang Aplikasi</h2>
+        <p class="card-sub">Informasi versi dan model yang digunakan.</p>
+      </div>
+      <span class="tile tile--mint">{{ icon('info', 18) }}</span>
+    </div>
+    <dl class="preview-meta">
+      <div><dt>Versi antarmuka</dt><dd>2.0</dd></div>
+      <div><dt>Deteksi objek</dt><dd>YOLOv8</dd></div>
+      <div><dt>Klasifikasi spesies</dt><dd>MobileNetV2 (5 kelas)</dd></div>
+      <div><dt>Status model</dt><dd id="model-status">Memeriksa…</dd></div>
+    </dl>
+    <div class="inline-actions">
+      <a class="btn btn--secondary btn--sm" href="{{ url_for('tentang') }}">Tentang MoldGuard</a>
+      <a class="btn btn--ghost btn--sm" href="{{ url_for('tentang') }}#bantuan">{{ icon('help', 15) }} Bantuan</a>
+    </div>
+  </section>
+
+  <section class="card span-2 danger-zone" id="data" aria-labelledby="settings-danger-title">
+    <div class="danger-zone__body">
+      <span class="tile tile--rose">{{ icon('trash', 18) }}</span>
+      <div>
+        <h2 class="card-title" id="settings-danger-title">Hapus Data Saya</h2>
+        <p class="muted">Menghapus seluruh riwayat pemeriksaan, pengingat, profil, dan preferensi dari browser ini. Tindakan ini tidak dapat dibatalkan.</p>
+      </div>
+    </div>
+    <button class="btn btn--danger" id="btn-delete-data" type="button">{{ icon('trash', 16) }} Hapus Semua Data</button>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}

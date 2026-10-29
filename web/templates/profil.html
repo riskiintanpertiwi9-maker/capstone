@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% set page = "profil" %}
+{% set page_title = "Profil" %}
+{% set page_subtitle = "Profil perangkat dan data lokal" %}
+{% block title %}Profil{% endblock %}
+
+{% block content %}
+<section class="page-head page-head--split">
+  <div class="page-head__lead">
+    <h1 class="page-title">Profil</h1>
+    <p class="lead">MoldGuard berjalan tanpa akun. Profil dan riwayat Anda tersimpan di browser perangkat ini.</p>
+  </div>
+  <button class="btn btn--secondary btn--sm" id="btn-edit-profile" type="button">{{ icon('pencil', 16) }} Edit Nama</button>
+</section>
+
+<div class="profile-layout">
+  <div class="stack">
+    <section class="card profile-card" aria-labelledby="profile-name">
+      <div class="profile-cover" aria-hidden="true">
+        <span class="profile-cover__orb profile-cover__orb--a"></span>
+        <span class="profile-cover__orb profile-cover__orb--b"></span>
+        <span class="profile-cover__leaf">{{ icon('leaf', 92) }}</span>
+      </div>
+      <div class="profile-card__body">
+        <span class="profile-avatar" id="profile-avatar" aria-hidden="true">P</span>
+        <h2 class="profile-name" id="profile-name">Pengguna MoldGuard</h2>
+        <p class="muted">Profil perangkat · tidak terhubung ke akun daring</p>
+        <div class="tag-row">
+          <span class="badge badge--soft">{{ icon('smartphone', 13) }} Data lokal</span>
+          <span class="badge badge--neutral">{{ icon('lock', 13) }} Tanpa autentikasi</span>
+        </div>
+
+        <dl class="profile-stats">
+          <div>
+            <dt>Pemeriksaan</dt>
+            <dd id="profile-total">0</dd>
+          </div>
+          <div>
+            <dt>Terindikasi</dt>
+            <dd id="profile-mold">0</dd>
+          </div>
+          <div>
+            <dt>Pengingat aktif</dt>
+            <dd id="profile-reminders">0</dd>
+          </div>
+        </dl>
+
+        <p class="muted-small" id="profile-joined">Profil dibuat —</p>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="device-title">
+      <div class="card-head">
+        <div>
+          <h2 class="card-title" id="device-title">Penyimpanan Perangkat</h2>
+          <p class="card-sub">Riwayat dan pengingat disimpan di localStorage browser.</p>
+        </div>
+        <span class="tile tile--blue">{{ icon('database', 18) }}</span>
+      </div>
+      <div class="storage-block">
+        <div class="storage-block__head">
+          <span id="storage-used">0 KB</span>
+          <span class="muted-small">Perkiraan kuota browser ±5 MB</span>
+        </div>
+        <div class="meter meter--thin" role="img" aria-label="Perkiraan penggunaan penyimpanan">
+          <span class="meter__fill" id="storage-fill" style="width:0%"></span>
+        </div>
+        <p class="muted-small" id="storage-detail">Belum ada data tersimpan.</p>
+      </div>
+      <div class="inline-actions">
+        <a class="btn btn--secondary btn--sm" href="{{ url_for('riwayat') }}">{{ icon('history', 15) }} Kelola Riwayat</a>
+        <a class="btn btn--ghost btn--sm" href="{{ url_for('pengaturan') }}#data">{{ icon('settings', 15) }} Pengaturan Data</a>
+      </div>
+      <p class="card-note">
+        {{ icon('info', 14) }}
+        <span>Foto dikirim ke server hanya untuk dianalisis dan tidak disimpan permanen. Thumbnail hasil disimpan di perangkat ini.</span>
+      </p>
+    </section>
+  </div>
+
+  <div class="stack">
+    <section class="card" aria-labelledby="menu-title">
+      <div class="card-head">
+        <h2 class="card-title" id="menu-title">Menu</h2>
+      </div>
+      <div class="menu-list">
+        <a class="menu-row" href="{{ url_for('pengaturan') }}">
+          <span class="tile tile--mint">{{ icon('settings', 18) }}</span>
+          <span class="menu-row__body">
+            <strong>Pengaturan</strong>
+            <span class="muted-small">Notifikasi, tema, privasi, dan izin kamera</span>
+          </span>
+          {{ icon('chevron-right', 17, 'menu-row__chevron') }}
+        </a>
+        <a class="menu-row" href="{{ url_for('riwayat') }}">
+          <span class="tile tile--blue">{{ icon('history', 18) }}</span>
+          <span class="menu-row__body">
+            <strong>Riwayat Pemeriksaan</strong>
+            <span class="muted-small">Lihat dan kelola hasil yang tersimpan</span>
+          </span>
+          {{ icon('chevron-right', 17, 'menu-row__chevron') }}
+        </a>
+        <a class="menu-row" href="{{ url_for('laporan') }}">
+          <span class="tile tile--amber">{{ icon('file', 18) }}</span>
+          <span class="menu-row__body">
+            <strong>Laporan</strong>
+            <span class="muted-small">Ringkasan pemeriksaan per periode</span>
+          </span>
+          {{ icon('chevron-right', 17, 'menu-row__chevron') }}
+        </a>
+        <a class="menu-row" href="{{ url_for('pengingat') }}">
+          <span class="tile tile--rose">{{ icon('bell', 18) }}</span>
+          <span class="menu-row__body">
+            <strong>Pengingat</strong>
+            <span class="muted-small">Jadwal perawatan rumah Anda</span>
+          </span>
+          {{ icon('chevron-right', 17, 'menu-row__chevron') }}
+        </a>
+        <a class="menu-row" href="{{ url_for('tentang') }}#bantuan">
+          <span class="tile tile--mint">{{ icon('help', 18) }}</span>
+          <span class="menu-row__body">
+            <strong>Bantuan</strong>
+            <span class="muted-small">Panduan penggunaan dan pertanyaan umum</span>
+          </span>
+          {{ icon('chevron-right', 17, 'menu-row__chevron') }}
+        </a>
+        <a class="menu-row" href="{{ url_for('tentang') }}#privasi">
+          <span class="tile tile--blue">{{ icon('shield', 18) }}</span>
+          <span class="menu-row__body">
+            <strong>Kebijakan Privasi</strong>
+            <span class="muted-small">Cara MoldGuard menangani data Anda</span>
+          </span>
+          {{ icon('chevron-right', 17, 'menu-row__chevron') }}
+        </a>
+        <a class="menu-row" href="{{ url_for('tentang') }}">
+          <span class="tile tile--amber">{{ icon('info', 18) }}</span>
+          <span class="menu-row__body">
+            <strong>Tentang Aplikasi</strong>
+            <span class="muted-small">Versi, teknologi, dan batasan model</span>
+          </span>
+          {{ icon('chevron-right', 17, 'menu-row__chevron') }}
+        </a>
+      </div>
+      <p class="card-note">
+        {{ icon('info', 14) }}
+        <span>Tidak ada menu keluar karena MoldGuard belum menggunakan akun atau sesi login.</span>
+      </p>
+    </section>
+
+    <section class="card card--mint">
+      <h2 class="card-title">Rumah Sehat, Keluarga Lebih Sehat</h2>
+      <p class="muted">Pemeriksaan rutin dan ventilasi yang baik membantu menjaga permukaan rumah tetap kering. Gunakan hasil AI sebagai petunjuk awal, bukan kesimpulan akhir.</p>
+      <a class="link-arrow" href="{{ url_for('edukasi') }}">Baca tips &amp; edukasi {{ icon('arrow-right', 15) }}</a>
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}

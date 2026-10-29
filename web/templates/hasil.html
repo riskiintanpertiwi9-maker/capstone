@@ -1,501 +1,185 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hasil Pemeriksaan Dinding — MoldGuard</title>
-  <meta name="description" content="Lihat hasil deteksi jamur dinding, penjelasan, panduan penanganan, dan tips pencegahan dari MoldGuard." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-</head>
-<body>
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% set page = "hasil" %}
+{% set page_title = "Hasil Deteksi" %}
+{% set page_subtitle = "Detail indikasi dari foto yang Anda periksa" %}
+{% block title %}Hasil Deteksi{% endblock %}
 
-  <!-- ══ NAVBAR ══ -->
-  <nav class="navbar" role="navigation" aria-label="Navigasi utama">
-    <div class="nav-inner">
-      <a href="{{ url_for('beranda') }}" class="nav-logo">
-        <div class="nav-logo-icon">🍃</div>
-        <span class="nav-logo-text">Mold<span>Guard</span></span>
-      </a>
-      <div class="nav-links">
-        <a href="{{ url_for('beranda') }}"  class="nav-link">Beranda</a>
-        <a href="{{ url_for('deteksi') }}"  class="nav-link">Deteksi Jamur</a>
-        <a href="{{ url_for('tentang') }}"  class="nav-link">Tentang</a>
+{% block content %}
+<section class="page-head page-head--split">
+  <div class="page-head__lead">
+    <a class="back-link back-link--inline" href="{{ url_for('riwayat') }}">{{ icon('arrow-left', 18) }} Riwayat</a>
+    <h1 class="page-title">Hasil Deteksi</h1>
+    <p class="lead">Lihat indikasi yang ditemukan model, tingkat keyakinannya, dan langkah lanjutan yang disarankan.</p>
+  </div>
+  <a class="btn btn--secondary btn--sm" href="{{ url_for('deteksi') }}">{{ icon('scan', 16) }} Scan Ulang</a>
+</section>
+
+<section class="card empty-state empty-state--page" id="result-empty" hidden>
+  <span class="empty-state__icon" id="result-empty-icon">{{ icon('scan', 28) }}</span>
+  <h2 class="empty-state__title" id="result-empty-title">Belum ada hasil untuk ditampilkan</h2>
+  <p class="empty-state__text" id="result-empty-text">
+    Hasil hanya tersedia setelah Anda menganalisis foto. Mulai pemeriksaan baru atau buka salah satu riwayat.
+  </p>
+  <div class="empty-state__actions">
+    <a class="btn btn--primary" href="{{ url_for('deteksi') }}">{{ icon('camera', 17) }} Mulai Deteksi</a>
+    <a class="btn btn--secondary" href="{{ url_for('riwayat') }}">Buka Riwayat</a>
+  </div>
+</section>
+
+<div class="result-layout" id="result-view" hidden>
+  <div class="stack">
+    <section class="card result-image-card">
+      <div class="card-head card-head--wrap">
+        <div>
+          <h2 class="card-title">Foto Pemeriksaan</h2>
+          <p class="card-sub" id="result-model-line">—</p>
+        </div>
+        <div class="segmented segmented--sm" id="image-toggle" role="tablist" aria-label="Pilih tampilan foto" hidden>
+          <button class="segmented__btn is-active" type="button" role="tab" aria-selected="true" data-image-view="annotated">Dengan anotasi</button>
+          <button class="segmented__btn" type="button" role="tab" aria-selected="false" data-image-view="original">Foto asli</button>
+        </div>
       </div>
-      <a href="{{ url_for('deteksi') }}" class="btn-nav">🔍 Periksa Lagi</a>
-      <button class="hamburger" id="hamburger" aria-label="Buka menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
-    <div class="mobile-nav" id="mobile-nav" aria-hidden="true">
-      <a href="{{ url_for('beranda') }}"  class="nav-link">Beranda</a>
-      <a href="{{ url_for('deteksi') }}"  class="nav-link">Deteksi Jamur</a>
-      <a href="{{ url_for('tentang') }}"  class="nav-link">Tentang</a>
-      <a href="{{ url_for('deteksi') }}" class="btn-nav">🔍 Periksa Lagi</a>
-    </div>
-  </nav>
 
-  <!-- ══ PAGE HEADER ══ -->
-  <div class="page-header">
-    <div class="page-header-inner">
-      <div class="page-header-label">Analisis Selesai</div>
-      <h1>Hasil Pemeriksaan Dinding</h1>
-      <p>Ringkasan deteksi, penjelasan, panduan penanganan, dan tips pencegahan.</p>
-    </div>
+      <figure class="result-image">
+        <img id="result-image" src="" alt="Foto pemeriksaan permukaan dinding" />
+        <figcaption class="image-badge" id="result-image-badge">Anotasi model</figcaption>
+      </figure>
+
+      <dl class="info-grid">
+        <div class="info-grid__item">
+          <dt>{{ icon('calendar', 15) }} Tanggal</dt>
+          <dd id="result-date">—</dd>
+        </div>
+        <div class="info-grid__item">
+          <dt>{{ icon('map-pin', 15) }} Lokasi</dt>
+          <dd id="result-location">Tanpa lokasi</dd>
+        </div>
+        <div class="info-grid__item">
+          <dt>{{ icon('scan', 15) }} Area ditandai</dt>
+          <dd id="result-boxes">0</dd>
+        </div>
+        <div class="info-grid__item">
+          <dt>{{ icon('activity', 15) }} Model</dt>
+          <dd id="result-models">—</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="card" id="result-notes-card">
+      <div class="card-head">
+        <h2 class="card-title">Catatan Model</h2>
+        <span class="badge badge--soft">{{ icon('info', 13) }} Transparansi</span>
+      </div>
+      <div class="note-list">
+        <div class="note-item">
+          <span class="note-item__icon tile--mint">{{ icon('scan', 16) }}</span>
+          <div>
+            <strong>Deteksi objek (YOLO)</strong>
+            <p>Menandai area pada foto yang menyerupai jamur. Tidak menghitung luas area secara medis.</p>
+          </div>
+        </div>
+        <div class="note-item">
+          <span class="note-item__icon tile--blue">{{ icon('mushroom', 16) }}</span>
+          <div>
+            <strong>Klasifikasi spesies (MobileNetV2)</strong>
+            <p>Hanya dijalankan pada area yang ditandai. Model dilatih pada lima jenis jamur dan bukan pengganti uji laboratorium.</p>
+          </div>
+        </div>
+        <div class="note-item">
+          <span class="note-item__icon tile--amber">{{ icon('alert-triangle', 16) }}</span>
+          <div>
+            <strong>Bukan diagnosis</strong>
+            <p>Hasil AI adalah indikasi visual. Keluhan kesehatan atau kerusakan bangunan perlu diperiksa tenaga ahli.</p>
+          </div>
+        </div>
+      </div>
+      <div class="alert alert--warning" id="result-errors" hidden role="status"></div>
+    </section>
   </div>
 
-  <!-- ══ HASIL LAYOUT ══ -->
-  <main class="hasil-layout" id="main-hasil" aria-live="polite">
-
-    <!-- No data fallback -->
-    <div id="no-data-msg" style="display:none;" class="model-notice">
-      <div class="model-notice-icon">⚠️</div>
-      <h3>Data Hasil Tidak Ditemukan</h3>
-      <p>
-        Tidak ada data hasil yang dapat ditampilkan. Silakan kembali ke halaman
-        Deteksi Jamur dan lakukan pemeriksaan terlebih dahulu.
-      </p>
-      <div style="margin-top:18px;">
-        <a href="{{ url_for('deteksi') }}" class="btn btn-primary">🔬 Mulai Pemeriksaan</a>
-      </div>
-    </div>
-
-    <!-- Result container (populated by JS) -->
-    <div id="result-container" style="display:none;">
-
-      <!-- A. Status Banner -->
-      <div id="status-banner" class="status-banner animate-fadeup" role="alert" aria-live="assertive"></div>
-
-      <!-- B. Gambar: Original + Annotated -->
-      <div id="img-section" class="animate-fadeup" style="animation-delay:.08s"></div>
-
-      <!-- C. YOLO Detections -->
-      <div id="yolo-section" style="display:none;" class="animate-fadeup" style="animation-delay:.12s"></div>
-
-      <!-- D. MobileNet Classification -->
-      <div id="mobile-section" style="display:none;" class="animate-fadeup" style="animation-delay:.16s"></div>
-
-      <!-- Model unavailable notice -->
-      <div id="model-unavail-section" style="display:none;" class="animate-fadeup"></div>
-
-      <!-- E. Penjelasan Hasil -->
-      <div id="penjelasan-section" class="animate-fadeup" style="animation-delay:.2s"></div>
-
-      <!-- F. Panduan Penanganan -->
-      <div id="panduan-section" class="animate-fadeup" style="animation-delay:.24s"></div>
-
-      <!-- G. Tips Pencegahan -->
-      <div id="tips-section" class="animate-fadeup" style="animation-delay:.28s"></div>
-
-      <!-- H. Peringatan Keselamatan -->
-      <div id="safety-section" class="safety-box animate-fadeup" style="animation-delay:.32s">
-        <div class="safety-box-header">
-          <span style="font-size:1.3rem;">⚠️</span>
-          <h3>Peringatan Keselamatan</h3>
-        </div>
-        <ul class="safety-list">
-          <li class="safety-item">Jangan mencampur bahan pembersih. Pemutih (bleach) <strong>tidak boleh</strong> dicampur dengan amonia, cuka, atau produk pembersih lain.</li>
-          <li class="safety-item">Hindari membersihkan area yang sangat luas atau material bangunan yang rusak berat tanpa perlindungan yang tepat (sarung tangan, masker).</li>
-          <li class="safety-item">Jika Anda mengalami gejala pernapasan, iritasi mata, atau tidak nyaman saat berada di area yang dicurigai, segera tinggalkan area tersebut.</li>
-          <li class="safety-item">Jika terdapat riwayat alergi, asma, atau kondisi kesehatan yang relevan, konsultasikan dengan profesional sebelum melakukan penanganan sendiri.</li>
-        </ul>
-      </div>
-
-      <!-- AI Disclaimer -->
-      <div class="ai-disclaimer animate-fadeup" style="animation-delay:.36s" role="note">
-        <span style="font-size:1.1rem;flex-shrink:0;">🤖</span>
-        <span>
-          <strong>Catatan AI:</strong> Hasil ini merupakan prediksi model berbasis analisis visual gambar.
-          Model mungkin tidak dapat mendeteksi semua kondisi jamur, terutama pada gambar berkualitas rendah,
-          sudut yang tidak ideal, atau area yang tidak terlihat. Hasil ini <strong>bukan diagnosis profesional</strong>
-          dan tidak menggantikan pemeriksaan langsung oleh ahli bangunan atau spesialis.
-        </span>
-      </div>
-
-      <!-- I. Tombol Tindakan -->
-      <div class="hasil-actions animate-fadeup" style="animation-delay:.4s;">
-        <a href="{{ url_for('deteksi') }}" class="btn btn-primary btn-lg" id="btn-periksa-lagi">
-          🔬 Periksa Foto Lain
-        </a>
-        <a href="{{ url_for('beranda') }}"  class="btn btn-ghost btn-lg" id="btn-ke-beranda">
-          🏠 Kembali ke Beranda
-        </a>
-      </div>
-
-    </div><!-- /result-container -->
-
-  </main>
-
-  <!-- ══ FOOTER ══ -->
-  <footer class="footer" role="contentinfo">
-    <div class="footer-inner">
-      <div class="footer-brand">
-        <a href="{{ url_for('beranda') }}" class="footer-logo">
-          <div class="footer-logo-icon">🍃</div> MoldGuard
-        </a>
-        <p class="footer-desc">Alat bantu pemeriksaan visual jamur dinding berbasis AI.</p>
-        <p class="footer-disclaimer">Hasil adalah prediksi berbasis citra, bukan diagnosis profesional.</p>
-      </div>
+  <div class="stack">
+    <section class="result-banner" id="result-status" aria-live="polite">
+      <span class="result-banner__icon" id="result-status-icon">{{ icon('check-circle', 24) }}</span>
       <div>
-        <p class="footer-heading">Navigasi</p>
-        <ul class="footer-links">
-          <li><a href="{{ url_for('beranda') }}">Beranda</a></li>
-          <li><a href="{{ url_for('deteksi') }}">Deteksi Jamur</a></li>
-          <li><a href="{{ url_for('tentang') }}">Tentang</a></li>
-        </ul>
+        <h2 class="result-banner__title" id="result-status-title">—</h2>
+        <p class="result-banner__text" id="result-status-text">—</p>
       </div>
-      <div></div>
+    </section>
+
+    <section class="card" id="confidence-card" hidden>
+      <div class="card-head">
+        <div>
+          <h2 class="card-title">Keyakinan Model</h2>
+          <p class="card-sub">Seberapa yakin model terhadap area yang ditandai.</p>
+        </div>
+        <span class="badge badge--neutral">Bukan risiko kesehatan</span>
+      </div>
+      <div class="meter" role="img" id="confidence-meter" aria-label="Keyakinan model">
+        <span class="meter__fill" id="confidence-fill" style="width:0%"></span>
+      </div>
+      <div class="meter-labels">
+        <span id="confidence-value">—</span>
+        <span class="muted-small">Skala 0–100%</span>
+      </div>
+      <p class="card-note">
+        {{ icon('info', 14) }}
+        <span>Angka ini menunjukkan keyakinan deteksi objek, bukan probabilitas bahaya bagi kesehatan dan bukan kepastian spesies.</span>
+      </p>
+    </section>
+
+    <section class="card" id="detections-card">
+      <div class="card-head">
+        <h2 class="card-title">Temuan pada Foto</h2>
+        <span class="badge badge--neutral" id="boxes-count">0 area</span>
+      </div>
+      <div id="detection-list" class="detection-list">
+        <p class="muted-small" id="detection-empty">Tidak ada area yang ditandai model pada foto ini.</p>
+      </div>
+    </section>
+
+    <section class="card" id="species-card" hidden>
+      <div class="card-head">
+        <h2 class="card-title">Perkiraan Spesies</h2>
+        <span class="badge badge--soft">{{ icon('info', 13) }} Dari classifier</span>
+      </div>
+      <div id="species-list" class="species-list"></div>
+      <div id="species-distribution" class="distribution" hidden>
+        <h3 class="mini-title">Distribusi kelas pada area terdeteksi</h3>
+        <div id="distribution-list"></div>
+      </div>
+      <p class="card-note">
+        {{ icon('alert-triangle', 14) }}
+        <span>Perkiraan spesies berasal dari classifier yang hanya dilatih pada lima jenis jamur. Ini bukan identifikasi laboratorium dan tidak menentukan tingkat bahaya.</span>
+      </p>
+    </section>
+
+    <section class="card card--mint" id="recommendations">
+      <div class="card-head">
+        <h2 class="card-title">Rekomendasi Tindakan</h2>
+        <span class="tile tile--mint">{{ icon('leaf', 18) }}</span>
+      </div>
+      <ul class="checklist" id="recommendation-list"></ul>
+    </section>
+
+    <div class="result-actions">
+      <button class="btn btn--primary btn--lg btn--block" id="btn-save" type="button">
+        {{ icon('save', 18) }} <span id="btn-save-label">Simpan Hasil</span>
+      </button>
+      <div class="result-actions__row">
+        <a class="btn btn--secondary" href="{{ url_for('deteksi') }}">{{ icon('refresh', 16) }} Scan Ulang</a>
+        <button class="btn btn--secondary" id="btn-print" type="button">{{ icon('download', 16) }} Cetak Laporan</button>
+        <a class="btn btn--ghost" href="{{ url_for('riwayat') }}">{{ icon('history', 16) }} Riwayat</a>
+      </div>
+      <p class="privacy-note">
+        {{ icon('info', 14) }}
+        <span>“Cetak Laporan” membuka dialog cetak browser. Pilih “Simpan sebagai PDF” bila ingin menyimpan berkas.</span>
+      </p>
     </div>
-    <div class="footer-bottom">
-      <p>MoldGuard &copy; 2024 — Proyek Capstone Informatika — Bukan pengganti pemeriksaan profesional.</p>
-    </div>
-  </footer>
+  </div>
+</div>
+{% endblock %}
 
-  <script>
-  "use strict";
-
-  // ── Config Konten per Status ─────────────────────────────────────────────────
-  const STATUS_CONFIG = {
-    mold_detected: {
-      icon:  '🚨',
-      label: 'Indikasi Terdeteksi',
-      title: 'Indikasi Jamur Terdeteksi',
-      desc:  'Model menemukan area pada gambar yang sesuai dengan pola yang dipelajari selama pelatihan. Area tersebut sebaiknya diperiksa lebih lanjut secara langsung.',
-      panduan_title: 'Apa yang Sebaiknya Kamu Lakukan?',
-      panduan_sub:   'Langkah-langkah penanganan ketika indikasi jamur ditemukan pada gambar.',
-      panduan_steps: [
-        { bold:'Periksa sumber kelembapan.', text:'Cari tahu apakah ada kebocoran atap, pipa bocor, atau rembesan air di sekitar area yang terlihat bermasalah.' },
-        { bold:'Perbaiki penyebab kelembapan.', text:'Membersihkan noda saja tidak cukup jika sumber kelembapan belum diatasi. Jamur akan muncul kembali jika kondisi lembap masih berlanjut.' },
-        { bold:'Tingkatkan ventilasi udara.', text:'Buka jendela, aktifkan kipas angin, atau perbaiki sirkulasi udara agar area tersebut dapat mengering.' },
-        { bold:'Untuk area kecil:', text:'Pertimbangkan pembersihan menggunakan produk yang sesuai dengan jenis permukaan, ikuti petunjuk produk, dan gunakan perlindungan diri yang memadai.' },
-        { bold:'Gunakan perlindungan diri.', text:'Kenakan sarung tangan dan masker saat membersihkan atau memeriksa area yang dicurigai. Hindari menghirup atau menyentuh langsung material yang mungkin terkontaminasi.' },
-        { bold:'Pertimbangkan bantuan profesional', text:'jika area terdampak cukup luas, jamur terus muncul kembali setelah dibersihkan, atau terdapat kerusakan struktural pada bangunan.' },
-      ],
-    },
-    no_mold: {
-      icon:  '✅',
-      label: 'Tidak Ada Indikasi',
-      title: 'Tidak Ditemukan Indikasi Jamur',
-      desc:  'Model tidak menemukan objek sesuai kelas yang dilatih pada gambar ini. Meski demikian, kondisi jamur tetap mungkin ada di area yang tidak terlihat, sudut yang tidak tertangkap kamera, atau area tersembunyi di balik permukaan.',
-      panduan_title: 'Langkah Pencegahan',
-      panduan_sub:   'Pertahankan kondisi dinding agar tetap bebas jamur dengan langkah-langkah berikut.',
-      panduan_steps: [
-        { bold:'Pastikan sirkulasi udara baik.', text:'Ruangan dengan ventilasi buruk lebih rentan terhadap pertumbuhan jamur akibat akumulasi kelembapan.' },
-        { bold:'Periksa kebocoran secara berkala.', text:'Atap, pipa, dan sambungan dinding perlu diperiksa secara rutin, terutama setelah musim hujan.' },
-        { bold:'Kendalikan kelembapan dalam ruangan.', text:'Gunakan exhaust fan di dapur dan kamar mandi. Hindari mengeringkan pakaian di dalam ruangan tanpa ventilasi.' },
-        { bold:'Perhatikan tanda-tanda awal.', text:'Bau apek, perubahan warna dinding, atau noda baru bisa menjadi indikasi awal yang perlu diperiksa lebih lanjut.' },
-        { bold:'Lakukan pemeriksaan ulang', text:'jika kondisi dinding berubah, terutama setelah kebocoran atau perubahan musim yang menyebabkan kelembapan meningkat.' },
-      ],
-    },
-    uncertain: {
-      icon:  '❓',
-      label: 'Hasil Tidak Meyakinkan',
-      title: 'Hasil Belum Dapat Dipastikan',
-      desc:  'Model tidak dapat memberikan prediksi yang meyakinkan dari gambar ini. Hal ini bisa disebabkan oleh kualitas gambar, pencahayaan yang tidak memadai, sudut pengambilan yang tidak ideal, atau area yang terhalang.',
-      panduan_title: 'Saran untuk Hasil yang Lebih Baik',
-      panduan_sub:   'Coba beberapa langkah berikut untuk mendapatkan hasil pemeriksaan yang lebih jelas.',
-      panduan_steps: [
-        { bold:'Ambil foto ulang', text:'dengan pencahayaan yang lebih baik. Gunakan cahaya alami atau lampu tambahan agar area dinding terlihat jelas.' },
-        { bold:'Fokuskan kamera', text:'langsung pada area yang dicurigai. Jangan terlalu jauh dan pastikan gambar tidak buram.' },
-        { bold:'Hindari gambar yang terhalang.', text:'Pastikan tidak ada benda, bayangan besar, atau pantulan cahaya yang menutupi area yang ingin diperiksa.' },
-        { bold:'Periksa kondisi dinding secara langsung', text:'untuk melihat apakah terdapat perubahan warna, tekstur, atau bau yang mencurigakan.' },
-        { bold:'Pertimbangkan pemeriksaan profesional', text:'jika Anda masih memiliki kekhawatiran setelah mencoba foto ulang.' },
-      ],
-    },
-    model_unavailable: {
-      icon:  '🔧',
-      label: 'Model Belum Tersedia',
-      title: 'Analisis AI Belum Dapat Dilakukan',
-      desc:  'Model YOLOv8 dan MobileNetV2 belum tersedia di sistem ini. Model perlu dilatih terlebih dahulu menggunakan script training yang tersedia di folder src/.',
-      panduan_title: 'Langkah Selanjutnya',
-      panduan_sub:   'Panduan untuk mengaktifkan kemampuan analisis AI.',
-      panduan_steps: [
-        { bold:'Latih model YOLOv8:', text:'jalankan python src/train_yolo.py setelah dataset disiapkan di datasets/yolo/' },
-        { bold:'Latih model MobileNetV2:', text:'jalankan python src/train_mobilenet_keras.py setelah dataset disiapkan di datasets/trained/classifier/' },
-        { bold:'Pastikan bobot model tersimpan', text:'di results/yolo/train/weights/best.pt dan models/mobilenet/mobilenet_mold.h5' },
-        { bold:'Restart server Flask', text:'agar model dimuat ulang. Server akan otomatis mendeteksi ketersediaan model.' },
-      ],
-    },
-  };
-
-  // ── Tips Pencegahan (selalu tampil) ──────────────────────────────────────────
-  const TIPS_DATA = [
-    { icon:'💨', title:'Sirkulasi Udara', desc:'Buka jendela secara rutin dan gunakan exhaust fan untuk mencegah penumpukan kelembapan.' },
-    { icon:'💧', title:'Kurangi Kelembapan', desc:'Hindari mengeringkan pakaian di dalam ruangan tertutup. Perbaiki segera jika ada kebocoran.' },
-    { icon:'🔧', title:'Perbaiki Kebocoran', desc:'Atasi kebocoran atap, pipa, atau rembesan dinding sebelum masalah kelembapan semakin parah.' },
-    { icon:'👁️', title:'Pantau Dinding', desc:'Perhatikan perubahan warna, bau apek, atau noda baru. Deteksi awal jauh lebih mudah ditangani.' },
-    { icon:'🧹', title:'Bersihkan Sumbernya', desc:'Mengecat atau menambal permukaan tidak cukup. Tangani sumber kelembapan terlebih dahulu.' },
-    { icon:'🏥', title:'Jaga Kesehatan', desc:'Paparan jamur dapat memengaruhi pernapasan. Perhatikan gejala kesehatan yang muncul di dalam ruangan.' },
-  ];
-
-  // ── Main render ──────────────────────────────────────────────────────────────
-  window.addEventListener('DOMContentLoaded', () => {
-    const raw = sessionStorage.getItem('moldguard_result');
-    if (!raw) {
-      document.getElementById('no-data-msg').style.display = 'block';
-      return;
-    }
-
-    let data;
-    try { data = JSON.parse(raw); }
-    catch(_) {
-      document.getElementById('no-data-msg').style.display = 'block';
-      return;
-    }
-
-    document.getElementById('result-container').style.display = 'block';
-    const status = data.status || 'uncertain';
-    const cfg    = STATUS_CONFIG[status] || STATUS_CONFIG['uncertain'];
-
-    renderStatusBanner(status, cfg, data);
-    renderImages(data);
-    renderYolo(data);
-    renderMobile(data);
-    renderModelUnavail(data, status);
-    renderPenjelasan(status, cfg, data);
-    renderPanduan(cfg);
-    renderTips();
-
-    // Hamburger
-    const hamburger = document.getElementById('hamburger');
-    const mobileNav = document.getElementById('mobile-nav');
-    hamburger.addEventListener('click', () => {
-      const open = hamburger.classList.toggle('open');
-      mobileNav.classList.toggle('open', open);
-      hamburger.setAttribute('aria-expanded', String(open));
-      mobileNav.setAttribute('aria-hidden', String(!open));
-    });
-  });
-
-  // ── A. Status Banner ─────────────────────────────────────────────────────────
-  function renderStatusBanner(status, cfg, data) {
-    const el = document.getElementById('status-banner');
-    el.className = `status-banner ${status} animate-fadeup`;
-
-    let extraErrors = '';
-    if (data.error_details && data.error_details.length > 0) {
-      extraErrors = `<ul class="error-detail-list" style="margin-top:8px;">
-        ${data.error_details.map(e => `<li>${e}</li>`).join('')}
-      </ul>`;
-    }
-
-    el.innerHTML = `
-      <div class="status-icon" aria-hidden="true">${cfg.icon}</div>
-      <div class="status-text-wrap">
-        <div class="status-label">${cfg.label}</div>
-        <div class="status-title">${cfg.title}</div>
-        <div class="status-desc">${cfg.desc}${extraErrors}</div>
-      </div>
-    `;
-  }
-
-  // ── B. Images ────────────────────────────────────────────────────────────────
-  function renderImages(data) {
-    const sec = document.getElementById('img-section');
-    const hasAnnotated = data.annotated_image && data.annotated_image !== data.original_image;
-    const cols = hasAnnotated ? '' : 'img-compare-single';
-
-    let html = `<div class="img-compare ${cols}">`;
-
-    if (data.original_image) {
-      html += `
-        <div class="img-frame">
-          <div class="img-frame-label">📷 Foto Asli</div>
-          <img src="data:image/jpeg;base64,${data.original_image}" alt="Foto dinding yang diperiksa" />
-        </div>`;
-    }
-
-    if (hasAnnotated) {
-      html += `
-        <div class="img-frame">
-          <div class="img-frame-label">🎯 Hasil Deteksi (YOLOv8)</div>
-          <img src="data:image/jpeg;base64,${data.annotated_image}" alt="Gambar dengan anotasi area terdeteksi" />
-        </div>`;
-    }
-
-    html += `</div>`;
-    sec.innerHTML = html;
-  }
-
-  // ── C. YOLO ──────────────────────────────────────────────────────────────────
-  function renderYolo(data) {
-    if (!data.yolo || !Array.isArray(data.yolo)) return;
-    const sec = document.getElementById('yolo-section');
-    sec.style.display = 'block';
-
-    const dets = data.yolo;
-    let rows = '';
-    if (dets.length === 0) {
-      rows = '<p style="font-size:.88rem;color:var(--text-muted);">Model YOLOv8 tidak mendeteksi objek yang sesuai kelas yang dilatih.</p>';
-    } else {
-      rows = dets.map((d, i) => {
-        const cls = (d.class || '').toLowerCase();
-        const badge = cls === 'mold' ? 'badge-mold' : cls === 'clean' ? 'badge-clean' : cls === 'suspected' ? 'badge-suspected' : 'badge-other';
-        const conf  = (d.confidence * 100).toFixed(1);
-        return `<div class="detection-row" style="animation-delay:${i*50}ms">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span class="detect-badge ${badge}">${d.class}</span>
-            <span style="font-size:.82rem;color:var(--text-muted);">Deteksi ke-${i+1}</span>
-          </div>
-          <span class="detect-conf">${conf}%</span>
-        </div>`;
-      }).join('');
-    }
-
-    sec.innerHTML = `
-      <div class="result-card">
-        <div class="result-card-header">
-          <span style="font-size:1.1rem;">🎯</span>
-          <h3>YOLOv8 — Deteksi Objek</h3>
-          <span style="margin-left:auto;font-size:.78rem;color:var(--text-muted);">${dets.length} objek terdeteksi</span>
-        </div>
-        <div class="result-card-body">
-          <div class="detection-list">${rows}</div>
-        </div>
-      </div>
-    `;
-  }
-
-  // ── D. MobileNet ─────────────────────────────────────────────────────────────
-  function renderMobile(data) {
-    if (!data.mobilenet || !Array.isArray(data.mobilenet)) return;
-    const sec = document.getElementById('mobile-section');
-    sec.style.display = 'block';
-
-    const sorted = [...data.mobilenet].sort((a,b) => b.confidence - a.confidence);
-    const top    = sorted[0];
-
-    const bars = sorted.map(item => {
-      const cls    = (item.class || '').toLowerCase();
-      const pct    = (item.confidence * 100).toFixed(1);
-      const fillCls = cls === 'mold' ? 'fill-mold' : cls === 'clean' ? 'fill-clean' : cls === 'suspected' ? 'fill-suspected' : 'fill-default';
-      const isTop   = item === top;
-      return `<div class="prob-bar-row">
-        <div class="prob-row-label">
-          <span class="prob-cls-name">${item.class}${isTop ? ' <span style="font-size:.72rem;background:var(--green-100);color:var(--moss-dark);padding:1px 7px;border-radius:4px;font-weight:700;">TERTINGGI</span>' : ''}</span>
-          <span class="prob-pct">${pct}%</span>
-        </div>
-        <div class="prob-track">
-          <div class="prob-fill ${fillCls}" style="width:0" data-w="${pct}%"></div>
-        </div>
-      </div>`;
-    }).join('');
-
-    sec.innerHTML = `
-      <div class="result-card">
-        <div class="result-card-header">
-          <span style="font-size:1.1rem;">📱</span>
-          <h3>MobileNetV2 — Klasifikasi Gambar</h3>
-          <span style="margin-left:auto;font-size:.78rem;color:var(--text-muted);">Prediksi tertinggi: <strong>${top.class}</strong></span>
-        </div>
-        <div class="result-card-body">
-          <div class="prob-list">${bars}</div>
-          <p style="font-size:.78rem;color:var(--text-muted);margin-top:14px;font-style:italic;">
-            Skor menunjukkan keyakinan model terhadap masing-masing kelas yang telah dilatih,
-            bukan persentase area yang terkena jamur.
-          </p>
-        </div>
-      </div>
-    `;
-
-    // Animate bars
-    requestAnimationFrame(() => {
-      sec.querySelectorAll('.prob-fill').forEach(b => { b.style.width = b.dataset.w; });
-    });
-  }
-
-  // ── Model Unavailable ────────────────────────────────────────────────────────
-  function renderModelUnavail(data, status) {
-    if (status !== 'model_unavailable') return;
-    const sec = document.getElementById('model-unavail-section');
-    sec.style.display = 'block';
-    sec.innerHTML = `
-      <div class="model-notice">
-        <div class="model-notice-icon">🔧</div>
-        <h3>Model AI Belum Tersedia</h3>
-        <p>
-          Model belum dilatih atau file bobot model tidak ditemukan.<br/>
-          Jalankan training terlebih dahulu:<br/>
-          <code>python src/train_yolo.py</code> &nbsp;|&nbsp;
-          <code>python src/train_mobilenet.py</code>
-        </p>
-      </div>
-    `;
-  }
-
-  // ── E. Penjelasan ────────────────────────────────────────────────────────────
-  function renderPenjelasan(status, cfg, data) {
-    const sec = document.getElementById('penjelasan-section');
-
-    let extra = '';
-    if (status === 'mold_detected' && data.yolo && data.yolo.length > 0) {
-      extra = `<p>Model YOLOv8 mendeteksi <strong>${data.yolo.length} area</strong> yang sesuai dengan pola yang dipelajari. Area ini ditandai dengan kotak (bounding box) pada gambar hasil deteksi di atas.</p>`;
-    }
-    if (status === 'mold_detected' && data.mobilenet) {
-      const top = [...data.mobilenet].sort((a,b)=>b.confidence-a.confidence)[0];
-      if (top) extra += `<p>MobileNetV2 mengklasifikasikan gambar sebagai <strong>${top.class}</strong> dengan skor keyakinan ${(top.confidence*100).toFixed(1)}%.</p>`;
-    }
-    if (status === 'no_mold') {
-      extra = `<p>Meski model tidak menemukan indikasi, perlu diingat bahwa jamur mungkin tidak selalu tampak jelas secara visual atau mungkin berada di area yang tidak terfoto. Pantau terus kondisi dinding Anda.</p>`;
-    }
-
-    sec.innerHTML = `
-      <div class="penjelasan-box">
-        <h3>📝 Penjelasan Hasil</h3>
-        <p>${cfg.desc}</p>
-        ${extra}
-        <p style="margin-top:12px;font-size:.85rem;color:var(--text-muted);font-style:italic;">
-          Ingat: Prediksi AI bersifat indikatif dan hanya berdasarkan analisis visual gambar.
-          Pemeriksaan langsung oleh tenaga profesional tetap diperlukan untuk penilaian yang akurat.
-        </p>
-      </div>
-    `;
-  }
-
-  // ── F. Panduan Penanganan ────────────────────────────────────────────────────
-  function renderPanduan(cfg) {
-    const steps = cfg.panduan_steps.map((s, i) => `
-      <div class="panduan-step">
-        <div class="panduan-step-num">${i+1}</div>
-        <div class="panduan-step-text"><strong>${s.bold}</strong> ${s.text}</div>
-      </div>`).join('');
-
-    document.getElementById('panduan-section').innerHTML = `
-      <div class="panduan-section">
-        <div class="panduan-header">
-          <h2>🛠️ ${cfg.panduan_title}</h2>
-          <p>${cfg.panduan_sub}</p>
-        </div>
-        <div class="panduan-body">
-          <div class="panduan-step-list">${steps}</div>
-        </div>
-      </div>
-    `;
-  }
-
-  // ── G. Tips Pencegahan ───────────────────────────────────────────────────────
-  function renderTips() {
-    const cards = TIPS_DATA.map(t => `
-      <div class="tip-card">
-        <div class="tip-icon">${t.icon}</div>
-        <div class="tip-text"><strong>${t.title}</strong>${t.desc}</div>
-      </div>`).join('');
-
-    document.getElementById('tips-section').innerHTML = `
-      <div class="panduan-section">
-        <div class="panduan-header" style="background:linear-gradient(135deg,#155e27,#166534);">
-          <h2>🌿 Cegah Jamur Muncul Kembali</h2>
-          <p>Tips pencegahan untuk menjaga kondisi dinding tetap baik.</p>
-        </div>
-        <div class="panduan-body">
-          <div class="tips-grid">${cards}</div>
-        </div>
-      </div>
-    `;
-  }
-
-  </script>
-</body>
-</html>
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/result.js') }}"></script>
+{% endblock %}

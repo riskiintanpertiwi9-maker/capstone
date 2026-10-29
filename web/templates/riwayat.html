@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% set page = "riwayat" %}
+{% set page_title = "Riwayat" %}
+{% set page_subtitle = "Pemeriksaan yang tersimpan di perangkat ini" %}
+{% block title %}Riwayat Deteksi{% endblock %}
+
+{% block content %}
+<section class="page-head page-head--split">
+  <div class="page-head__lead">
+    <h1 class="page-title">Riwayat Deteksi</h1>
+    <p class="lead">Semua pemeriksaan yang Anda simpan tersimpan di browser perangkat ini, bukan di server.</p>
+  </div>
+  <a class="btn btn--primary" href="{{ url_for('deteksi') }}">{{ icon('plus', 17) }} Deteksi Baru</a>
+</section>
+
+<div class="history-layout">
+  <section class="card history-main" aria-labelledby="history-title">
+    <h2 class="sr-only" id="history-title">Daftar pemeriksaan</h2>
+
+    <div class="history-toolbar">
+      <div class="search-field">
+        {{ icon('search', 18, 'search-field__icon') }}
+        <label class="sr-only" for="history-search">Cari riwayat berdasarkan lokasi atau spesies</label>
+        <input id="history-search" type="search" placeholder="Cari lokasi atau spesies…" autocomplete="off" />
+      </div>
+      <label class="select-pill">
+        <span class="sr-only">Urutkan riwayat</span>
+        <select id="history-sort">
+          <option value="newest">Terbaru</option>
+          <option value="oldest">Terlama</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="filter-pills" role="group" aria-label="Filter status pemeriksaan">
+      <button class="pill is-active" type="button" data-filter="all" aria-pressed="true">
+        Semua <span class="pill__count" id="count-all">0</span>
+      </button>
+      <button class="pill" type="button" data-filter="mold" aria-pressed="false">
+        Terindikasi <span class="pill__count" id="count-mold">0</span>
+      </button>
+      <button class="pill" type="button" data-filter="clean" aria-pressed="false">
+        Tidak terindikasi <span class="pill__count" id="count-clean">0</span>
+      </button>
+    </div>
+
+    <div class="history-list" id="history-list"></div>
+
+    <div class="list-footer">
+      <p class="muted-small" id="history-count">Memuat…</p>
+      <button class="btn btn--secondary btn--sm" id="btn-more" type="button" hidden>Muat lebih banyak</button>
+    </div>
+  </section>
+
+  <aside class="card history-preview" id="history-preview" aria-label="Pratinjau pemeriksaan terpilih">
+    <div class="empty-state empty-state--compact">
+      <span class="empty-state__icon">{{ icon('history', 24) }}</span>
+      <p>Pilih pemeriksaan untuk melihat pratinjau.</p>
+    </div>
+  </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/riwayat.js') }}"></script>
+{% endblock %}

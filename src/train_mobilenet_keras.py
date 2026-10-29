@@ -1,11 +1,13 @@
 """Training / evaluasi MobileNetV2 (Keras) untuk klasifikasi crop jamur.
 
 Ini adalah pipeline yang menghasilkan `models/mobilenet/mobilenet_mold.h5`
-(checkpoint 9 kelas yang dipakai web app).
+(checkpoint 5 kelas yang dipakai web app).
 
 Contoh:
-    python src/train_mobilenet_keras.py --epochs 15 --batch 8 --patience 5
-    python src/train_mobilenet_keras.py --eval-only --eval-split val
+    python src/train_mobilenet_keras.py --data datasets/classification \
+        --reset-labels --epochs 20 --batch 16 --patience 6 --name train_5class
+    python src/train_mobilenet_keras.py --data datasets/classification \
+        --eval-only --eval-split test
 
 Urutan kelas mengikuti `models/mobilenet/mobilenet_mold.labels.json` agar indeks
 output checkpoint tidak tertukar. Split test (jika ada) hanya untuk evaluasi.
@@ -42,7 +44,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--data",
         type=Path,
-        default=PROJECT_ROOT / "datasets" / "trained" / "classifier",
+        default=PROJECT_ROOT / "datasets" / "classification",
         help="Folder berisi train/ val/ (dan opsional test/)",
     )
     parser.add_argument(
@@ -56,6 +58,11 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=PROJECT_ROOT / "models" / "mobilenet" / "mobilenet_mold.h5",
         help="Path checkpoint hasil training",
+    )
+    parser.add_argument(
+        "--reset-labels",
+        action="store_true",
+        help="Timpa sidecar label bila tidak cocok dengan folder dataset",
     )
     parser.add_argument("--epochs", type=int, default=15)
     parser.add_argument("--batch", type=int, default=8)
@@ -241,7 +248,9 @@ def backup_if_exists(path: Path) -> None:
     print(f"[BACKUP] Checkpoint lama disalin ke {backup_path}")
 
 
-def load_class_order(labels_path: Path, data_dir: Path) -> Tuple[List[str], str]:
+def load_class_order(
+    labels_path: Path, data_dir: Path, reset_labels: bool = False
+) -> Tuple[List[str], str]:
     from utils.class_names import discover_class_dirs, load_class_names, save_class_names
 
     discovered = discover_class_dirs(data_dir / "train")
@@ -250,11 +259,15 @@ def load_class_order(labels_path: Path, data_dir: Path) -> Tuple[List[str], str]
     stored = load_class_names(labels_path)
     if stored:
         if set(stored) != set(discovered):
-            raise ValueError(
-                "Sidecar label tidak cocok dengan folder dataset. "
-                f"Sidecar: {stored}. Dataset: {sorted(discovered)}. "
-                "Perbaiki dataset atau hapus sidecar secara sadar."
-            )
+            if not reset_labels:
+                raise ValueError(
+                    "Sidecar label tidak cocok dengan folder dataset. "
+                    f"Sidecar: {stored}. Dataset: {sorted(discovered)}. "
+                    "Jalankan ulang dengan --reset-labels bila memang berganti dataset."
+                )
+            save_class_names(labels_path, discovered)
+            print(f"[LABELS] Sidecar ditimpa mengikuti dataset: {labels_path}")
+            return discovered, "dataset (reset)"
         return stored, "sidecar"
     save_class_names(labels_path, discovered)
     print(f"[LABELS] Sidecar baru dibuat: {labels_path}")
@@ -303,7 +316,9 @@ def run_evaluation(args: argparse.Namespace, class_names: List[str]) -> None:
 def main() -> int:
     args = parse_args()
     try:
-        class_names, labels_source = load_class_order(args.labels, args.data)
+        class_names, labels_source = load_class_order(
+            args.labels, args.data, reset_labels=args.reset_labels
+        )
         print(f"[KELAS] {len(class_names)} kelas (sumber: {labels_source}): {class_names}")
 
         if args.eval_only:

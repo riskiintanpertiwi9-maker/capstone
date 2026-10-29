@@ -1,480 +1,152 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deteksi Jamur Dinding — MoldGuard</title>
-  <meta name="description" content="Periksa dinding Anda dengan mengambil foto langsung menggunakan kamera atau mengunggah gambar dari galeri." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-</head>
-<body>
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% set page = "deteksi" %}
+{% set page_title = "Deteksi Jamur" %}
+{% set page_subtitle = "Scan area menggunakan kamera atau unggah foto" %}
+{% block title %}Deteksi Jamur{% endblock %}
 
-  <!-- ══ NAVBAR ══ -->
-  <nav class="navbar" role="navigation" aria-label="Navigasi utama">
-    <div class="nav-inner">
-      <a href="{{ url_for('beranda') }}" class="nav-logo">
-        <div class="nav-logo-icon">🍃</div>
-        <span class="nav-logo-text">Mold<span>Guard</span></span>
-      </a>
-      <div class="nav-links">
-        <a href="{{ url_for('beranda') }}"  class="nav-link">Beranda</a>
-        <a href="{{ url_for('deteksi') }}"  class="nav-link active">Deteksi Jamur</a>
-        <a href="{{ url_for('tentang') }}"  class="nav-link">Tentang</a>
-      </div>
-      <a href="{{ url_for('deteksi') }}" class="btn-nav">🔍 Mulai Pemeriksaan</a>
-      <button class="hamburger" id="hamburger" aria-label="Buka menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
-    <div class="mobile-nav" id="mobile-nav" aria-hidden="true">
-      <a href="{{ url_for('beranda') }}"  class="nav-link">Beranda</a>
-      <a href="{{ url_for('deteksi') }}"  class="nav-link active">Deteksi Jamur</a>
-      <a href="{{ url_for('tentang') }}"  class="nav-link">Tentang</a>
-      <a href="{{ url_for('deteksi') }}" class="btn-nav">🔍 Mulai Pemeriksaan</a>
-    </div>
-  </nav>
-
-  <!-- ══ PAGE HEADER ══ -->
-  <div class="page-header">
-    <div class="page-header-inner">
-      <div class="page-header-label">Fitur Utama</div>
-      <h1>Deteksi Jamur Dinding</h1>
-      <p>Ambil atau unggah foto dinding, lalu analisis dengan model AI.</p>
-    </div>
+{% block content %}
+<section class="page-head">
+  <div>
+    <h1 class="page-title">Deteksi Jamur</h1>
+    <p class="lead">Scan area menggunakan kamera atau unggah foto untuk mendeteksi jamur di rumah Anda.</p>
   </div>
+  <a class="btn btn--ghost btn--sm" href="{{ url_for('tentang') }}#bantuan">{{ icon('help', 16) }} Panduan</a>
+</section>
 
-  <!-- ══ DETECTION FORM ══ -->
-  <main class="detection-layout" id="main-content">
+<div class="detection-layout">
+  <section class="card detect-panel" aria-labelledby="detect-panel-title">
+    <h2 id="detect-panel-title" class="sr-only">Ambil atau unggah foto</h2>
 
-    <!-- Input Method Tabs -->
-    <div class="input-tabs" role="tablist" aria-label="Pilih metode input">
-      <button class="input-tab active" id="tab-kamera" role="tab"
-              aria-selected="true" aria-controls="panel-kamera" data-panel="panel-kamera">
-        📷 Ambil Foto
+    <div class="segmented" role="tablist" aria-label="Pilih sumber gambar">
+      <button class="segmented__btn is-active" id="tab-kamera" type="button" role="tab" aria-selected="true" aria-controls="panel-kamera" data-panel="panel-kamera">
+        {{ icon('camera', 18) }} Kamera
       </button>
-      <button class="input-tab" id="tab-unggah" role="tab"
-              aria-selected="false" aria-controls="panel-unggah" data-panel="panel-unggah">
-        📁 Unggah Foto
+      <button class="segmented__btn" id="tab-unggah" type="button" role="tab" aria-selected="false" aria-controls="panel-unggah" data-panel="panel-unggah">
+        {{ icon('image', 18) }} Galeri
       </button>
     </div>
 
-    <!-- Detection Card -->
-    <div class="detect-card" role="main">
-      <div class="detect-card-body">
+    <div id="analysis-error" class="alert alert--danger" hidden role="alert"></div>
 
-        <!-- ── Panel Kamera ── -->
-        <div id="panel-kamera" class="camera-panel" role="tabpanel" aria-labelledby="tab-kamera">
-          <p style="font-size:.88rem;color:var(--text-muted);">
-            Gunakan kamera perangkat untuk mengambil foto dinding secara langsung.
-            Pada HP, kamera belakang akan diprioritaskan.
-          </p>
+    <div id="panel-kamera" class="camera-panel" role="tabpanel" aria-labelledby="tab-kamera">
+      <div class="camera-status" id="camera-status-msg" role="status" aria-live="polite">
+        {{ icon('info', 16) }}
+        <span>Klik <strong>Buka Kamera</strong> untuk memulai. Kamera memerlukan izin browser dan HTTPS atau localhost.</span>
+      </div>
 
-          <!-- Status bar -->
-          <div id="camera-status-msg" class="camera-status info" role="status" aria-live="polite">
-            💡 Klik <strong>"Buka Kamera"</strong> untuk memulai. Kamera memerlukan izin browser
-            dan HTTPS (atau localhost).
-          </div>
+      <div class="camera-viewport" id="camera-viewport" aria-label="Pratinjau kamera">
+        <video id="camera-video" autoplay playsinline muted aria-label="Pratinjau kamera langsung"></video>
+        <canvas id="camera-canvas" aria-hidden="true"></canvas>
+        <img id="camera-photo-preview" alt="Foto yang baru diambil dari kamera" hidden />
+        <div class="camera-placeholder" id="camera-placeholder">
+          <span class="camera-placeholder__icon">{{ icon('camera', 30) }}</span>
+          <span>Kamera belum aktif</span>
+        </div>
+        <div class="corner-guide" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <p class="camera-tip" id="camera-tip">Arahkan kamera ke area yang ingin dipindai dan pastikan pencahayaan cukup.</p>
+      </div>
 
-          <!-- Viewport -->
-          <div class="camera-viewport" id="camera-viewport" aria-label="Pratinjau kamera">
-            <video id="camera-video" autoplay playsinline muted aria-label="Live kamera"></video>
-            <canvas id="camera-canvas" aria-hidden="true"></canvas>
-            <div class="camera-placeholder" id="camera-placeholder" aria-hidden="true">
-              <div class="camera-placeholder-icon">📷</div>
-              <div>Kamera belum aktif</div>
-            </div>
-          </div>
-
-          <!-- Foto yang diambil -->
-          <div id="camera-photo-container" style="display:none;">
-            <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:8px;">Foto yang diambil:</p>
-            <img id="camera-photo-preview" src="" alt="Foto yang diambil dari kamera" />
-          </div>
-
-          <!-- Controls -->
-          <div class="camera-controls" id="camera-controls">
-            <button class="btn btn-primary" id="btn-buka-kamera">📷 Buka Kamera</button>
-            <button class="btn btn-ghost"   id="btn-ambil-foto"   style="display:none;">📸 Ambil Foto</button>
-            <button class="btn btn-ghost"   id="btn-ulangi-foto"  style="display:none;">🔄 Ulangi</button>
-            <button class="btn btn-outline" id="btn-gunakan-foto" style="display:none;">✅ Gunakan Foto</button>
-            <button class="btn btn-ghost"   id="btn-tutup-kamera" style="display:none;">✕ Tutup Kamera</button>
-          </div>
-        </div><!-- /panel-kamera -->
-
-        <div class="detect-divider"></div>
-
-        <!-- ── Panel Unggah ── -->
-        <div id="panel-unggah" class="upload-panel" role="tabpanel"
-             aria-labelledby="tab-unggah" style="display:none;">
-          <p style="font-size:.88rem;color:var(--text-muted);">
-            Pilih gambar dari galeri HP atau komputer Anda. Format yang didukung:
-            PNG, JPG, JPEG, BMP, WEBP. Ukuran maksimum 16MB.
-          </p>
-
-          <!-- Drop Zone -->
-          <div class="drop-zone" id="drop-zone" role="button" tabindex="0"
-               aria-label="Area unggah gambar, klik atau seret file ke sini">
-            <div class="drop-zone-icon">📁</div>
-            <p class="drop-zone-text">
-              Seret &amp; lepas file di sini atau
-              <span class="drop-link" id="browse-trigger">klik untuk pilih</span>
-            </p>
-            <p class="drop-zone-hint">PNG, JPG, JPEG, BMP, WEBP — Maks. 16MB</p>
-            <input type="file" id="file-input" accept="image/*"
-                   hidden aria-hidden="true" />
-          </div>
-
-          <!-- Preview -->
-          <div class="upload-preview-wrap" id="upload-preview-wrap">
-            <img id="upload-preview-img" src="" alt="Pratinjau foto yang dipilih" />
-            <div class="upload-preview-meta">
-              <span class="upload-filename" id="upload-filename"></span>
-              <button class="btn-remove-upload" id="btn-hapus-foto" aria-label="Hapus foto">
-                ✕ Hapus
-              </button>
-            </div>
-          </div>
-        </div><!-- /panel-unggah -->
-
-      </div><!-- /detect-card-body -->
-
-      <!-- Submit zone -->
-      <div class="detect-submit">
-        <button class="btn-periksa" id="btn-periksa" disabled aria-label="Periksa dinding">
-          <span class="periksa-icon">🔬</span>
-          <span class="periksa-text">Periksa Dinding</span>
-          <span class="btn-spinner" style="display:none;" aria-hidden="true"></span>
+      <div class="camera-controls" id="camera-controls">
+        <button class="btn btn--primary" id="btn-buka-kamera" type="button">{{ icon('camera', 17) }} Buka Kamera</button>
+        <button class="btn btn--primary shutter" id="btn-ambil-foto" type="button" hidden>
+          <span class="shutter__icon">{{ icon('camera', 22) }}</span>
+          <span class="shutter__label">Ambil Foto</span>
         </button>
-        <p class="detect-note">
-          Foto hanya diproses sementara untuk analisis dan tidak disimpan secara permanen.
-        </p>
+        <button class="btn btn--secondary" id="btn-ulangi-foto" type="button" hidden>{{ icon('refresh', 17) }} Ulangi</button>
+        <button class="btn btn--primary" id="btn-gunakan-foto" type="button" hidden>{{ icon('check', 17) }} Gunakan Foto</button>
+        <button class="btn btn--ghost" id="btn-tutup-kamera" type="button" hidden>{{ icon('x', 17) }} Tutup Kamera</button>
       </div>
-    </div><!-- /detect-card -->
+    </div>
 
-  </main><!-- /detection-layout -->
+    <div id="panel-unggah" role="tabpanel" aria-labelledby="tab-unggah" hidden>
+      <div class="drop-zone" id="drop-zone" role="button" tabindex="0" aria-label="Area unggah gambar. Klik atau seret file ke sini">
+        <span class="drop-zone__icon">{{ icon('upload', 28) }}</span>
+        <p class="drop-zone__text">Seret &amp; lepas foto di sini, atau <span class="drop-link">pilih dari perangkat</span></p>
+        <p class="drop-zone__hint">PNG, JPG, JPEG, WEBP, BMP · Maks. 16MB</p>
+        <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp,image/bmp" hidden />
+      </div>
 
-  <!-- ══ LOADING OVERLAY ══ -->
-  <div class="loading-overlay" id="loading-overlay" role="alert" aria-live="assertive" aria-label="Sedang menganalisis">
-    <div class="loading-spinner-lg" aria-hidden="true"></div>
-    <div class="loading-text">Sedang Menganalisis...</div>
-    <div class="loading-sub">Model AI sedang memproses gambar. Mohon tunggu.</div>
+      <div class="upload-preview" id="upload-preview-wrap" hidden>
+        <img id="upload-preview-img" src="" alt="Pratinjau foto yang dipilih" />
+        <div class="upload-preview__meta">
+          <span id="upload-filename" class="muted-small"></span>
+          <button class="btn btn--ghost btn--sm" id="btn-hapus-foto" type="button">{{ icon('trash', 16) }} Hapus</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field detect-location">
+      <label for="location-input">Lokasi pemeriksaan <span class="muted-small">(opsional)</span></label>
+      <div class="input-with-icon">
+        {{ icon('map-pin', 17) }}
+        <input id="location-input" type="text" maxlength="60" placeholder="Contoh: Dinding kamar mandi" autocomplete="off" />
+      </div>
+      <p class="field-hint">Disimpan bersama hasil jika Anda menekan “Simpan Hasil”.</p>
+    </div>
+
+    <button class="btn btn--primary btn--lg btn--block" id="btn-periksa" type="button" disabled>
+      <span class="btn-label">{{ icon('scan', 18) }} Mulai Analisis</span>
+      <span class="btn-spinner" hidden aria-hidden="true">{{ icon('loader', 18, 'spin') }}</span>
+    </button>
+    <p class="privacy-note">{{ icon('lock', 14) }} Foto dikirim ke server untuk dianalisis dan tidak disimpan permanen oleh server.</p>
+  </section>
+
+  <aside class="stack detection-aside">
+    <section class="card">
+      <h2 class="card-title">Cara Deteksi Jamur</h2>
+      <ol class="steps">
+        <li class="step">
+          <span class="step__num">1</span>
+          <span><strong>Pilih sumber gambar</strong><span class="step__text">Gunakan kamera secara langsung atau unggah foto dari galeri.</span></span>
+        </li>
+        <li class="step">
+          <span class="step__num">2</span>
+          <span><strong>Arahkan ke area yang dicurigai</strong><span class="step__text">Pastikan area jamur terlihat jelas dalam gambar.</span></span>
+        </li>
+        <li class="step">
+          <span class="step__num">3</span>
+          <span><strong>Mulai analisis</strong><span class="step__text">Tekan “Mulai Analisis” dan tunggu hasilnya.</span></span>
+        </li>
+        <li class="step">
+          <span class="step__num">4</span>
+          <span><strong>Lihat hasil deteksi</strong><span class="step__text">Dapatkan indikasi area, tingkat keyakinan model, dan rekomendasi.</span></span>
+        </li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2 class="card-title">Format File yang Didukung</h2>
+      <ul class="format-list">
+        <li><span class="format-tag">JPG</span><span>Joint Photographic Experts Group</span></li>
+        <li><span class="format-tag">PNG</span><span>Portable Network Graphics</span></li>
+        <li><span class="format-tag">WEBP</span><span>Format gambar modern</span></li>
+        <li><span class="format-tag">BMP</span><span>Bitmap</span></li>
+      </ul>
+      <p class="muted-small format-note">{{ icon('info', 14) }} Ukuran file maksimal 16MB.</p>
+    </section>
+
+    <section class="card card--mint">
+      <h2 class="card-title">Tips Mendapatkan Hasil yang Akurat</h2>
+      <div class="mini-tips">
+        <div class="mini-tip"><span class="mini-tip__icon tile--mint">{{ icon('sun', 16) }}</span><div><strong>Pencahayaan cukup</strong><span>Pastikan area terlihat jelas dan tidak terlalu gelap.</span></div></div>
+        <div class="mini-tip"><span class="mini-tip__icon tile--blue">{{ icon('eye', 16) }}</span><div><strong>Fokus pada area</strong><span>Arahkan kamera dengan stabil dan jelas.</span></div></div>
+        <div class="mini-tip"><span class="mini-tip__icon tile--amber">{{ icon('scan', 16) }}</span><div><strong>Ambil dari jarak dekat</strong><span>Usahakan jarak 30–100 cm dari objek.</span></div></div>
+        <div class="mini-tip"><span class="mini-tip__icon tile--rose">{{ icon('image', 16) }}</span><div><strong>Seluruh area dalam frame</strong><span>Pastikan bagian jamur terlihat dalam frame.</span></div></div>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<div class="loading-overlay" id="loading-overlay" role="alert" aria-live="assertive" hidden>
+  <div class="loading-card">
+    <span class="loading-spinner" aria-hidden="true">{{ icon('loader', 30, 'spin') }}</span>
+    <p class="loading-title">Menganalisis gambar…</p>
+    <p class="loading-text">Model AI sedang memproses foto Anda. Proses ini biasanya memerlukan beberapa detik.</p>
   </div>
+</div>
+{% endblock %}
 
-  <!-- ══ FOOTER ══ -->
-  <footer class="footer" role="contentinfo">
-    <div class="footer-inner">
-      <div class="footer-brand">
-        <a href="{{ url_for('beranda') }}" class="footer-logo">
-          <div class="footer-logo-icon">🍃</div> MoldGuard
-        </a>
-        <p class="footer-desc">Alat bantu pemeriksaan visual jamur dinding berbasis AI.</p>
-        <p class="footer-disclaimer">Hasil adalah prediksi berbasis citra, bukan diagnosis profesional.</p>
-      </div>
-      <div>
-        <p class="footer-heading">Navigasi</p>
-        <ul class="footer-links">
-          <li><a href="{{ url_for('beranda') }}">Beranda</a></li>
-          <li><a href="{{ url_for('deteksi') }}">Deteksi Jamur</a></li>
-          <li><a href="{{ url_for('tentang') }}">Tentang</a></li>
-        </ul>
-      </div>
-      <div>
-        <p class="footer-heading">Panduan Penggunaan</p>
-        <ul class="footer-links">
-          <li><a href="#">Foto dengan pencahayaan cukup</a></li>
-          <li><a href="#">Fokuskan pada area yang dicurigai</a></li>
-          <li><a href="#">Hindari foto buram atau terlalu jauh</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>MoldGuard &copy; 2024 — Proyek Capstone Informatika — Bukan pengganti pemeriksaan profesional.</p>
-    </div>
-  </footer>
-
-  <script>
-  "use strict";
-
-  // ── State ────────────────────────────────────────────────────────────────────
-  let _stream        = null;   // MediaStream
-  let _cameraActive  = false;
-  let _capturedBlob  = null;   // foto dari kamera (Blob)
-  let _uploadedFile  = null;   // file dari galeri (File)
-  let _activePanel   = 'panel-kamera';
-
-  // ── DOM ──────────────────────────────────────────────────────────────────────
-  const tabBtns        = document.querySelectorAll('.input-tab');
-  const panels         = { 'panel-kamera': document.getElementById('panel-kamera'),
-                            'panel-unggah': document.getElementById('panel-unggah') };
-  const video          = document.getElementById('camera-video');
-  const canvas         = document.getElementById('camera-canvas');
-  const placeholder    = document.getElementById('camera-placeholder');
-  const cameraStatus   = document.getElementById('camera-status-msg');
-  const photoContainer = document.getElementById('camera-photo-container');
-  const photoPreview   = document.getElementById('camera-photo-preview');
-
-  const btnBuka        = document.getElementById('btn-buka-kamera');
-  const btnAmbil       = document.getElementById('btn-ambil-foto');
-  const btnUlangi      = document.getElementById('btn-ulangi-foto');
-  const btnGunakan     = document.getElementById('btn-gunakan-foto');
-  const btnTutup       = document.getElementById('btn-tutup-kamera');
-
-  const dropZone       = document.getElementById('drop-zone');
-  const fileInput      = document.getElementById('file-input');
-  const browseTrigger  = document.getElementById('browse-trigger');
-  const previewWrap    = document.getElementById('upload-preview-wrap');
-  const previewImg     = document.getElementById('upload-preview-img');
-  const filenameLbl    = document.getElementById('upload-filename');
-  const btnHapusFoto   = document.getElementById('btn-hapus-foto');
-
-  const btnPeriksa     = document.getElementById('btn-periksa');
-  const loadingOverlay = document.getElementById('loading-overlay');
-
-  // ── Tabs ─────────────────────────────────────────────────────────────────────
-  tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      tabBtns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
-      btn.classList.add('active');
-      btn.setAttribute('aria-selected','true');
-      const panelId = btn.dataset.panel;
-      Object.entries(panels).forEach(([id, el]) => el.style.display = id === panelId ? '' : 'none');
-      _activePanel = panelId;
-      updatePeriksa();
-      // Stop camera when switching away
-      if (panelId !== 'panel-kamera') stopCamera();
-    });
-  });
-
-  // ── Camera ───────────────────────────────────────────────────────────────────
-  btnBuka.addEventListener('click', openCamera);
-  btnAmbil.addEventListener('click', capturePhoto);
-  btnUlangi.addEventListener('click', retakePhoto);
-  btnGunakan.addEventListener('click', usePhoto);
-  btnTutup.addEventListener('click', stopCamera);
-
-  async function openCamera() {
-    setStatus('info','⏳ Meminta izin kamera...');
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setStatus('error','❌ Browser tidak mendukung akses kamera. Coba gunakan Chrome atau Firefox terkini, dan pastikan halaman diakses via HTTPS atau localhost.');
-      return;
-    }
-    const constraints = { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false };
-    try {
-      _stream = await navigator.mediaDevices.getUserMedia(constraints);
-      video.srcObject = _stream;
-      placeholder.style.display = 'none';
-      video.style.display = 'block';
-      _cameraActive = true;
-      _capturedBlob = null;
-      photoContainer.style.display = 'none';
-      photoPreview.src = '';
-      setStatus('info','✅ Kamera aktif. Arahkan ke dinding yang ingin diperiksa, lalu klik Ambil Foto.');
-      setCameraUI('live');
-      updatePeriksa();
-    } catch (err) {
-      let msg = '❌ Tidak dapat membuka kamera.';
-      if (err.name === 'NotAllowedError') msg = '❌ Izin kamera ditolak. Izinkan akses kamera di pengaturan browser, lalu coba lagi.';
-      else if (err.name === 'NotFoundError') msg = '❌ Kamera tidak ditemukan di perangkat ini.';
-      else if (err.name === 'NotReadableError') msg = '⚠️ Kamera sedang digunakan oleh aplikasi lain.';
-      else if (err.name === 'OverconstrainedError') {
-        // Retry without facingMode
-        try {
-          _stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-          video.srcObject = _stream; placeholder.style.display='none'; video.style.display='block';
-          _cameraActive=true; setStatus('info','✅ Kamera aktif (mode umum).'); setCameraUI('live'); updatePeriksa(); return;
-        } catch(e2) { msg = '❌ Tidak dapat mengakses kamera mana pun.'; }
-      }
-      setStatus('error', msg + ' Gunakan tab Unggah Foto sebagai alternatif.');
-    }
-  }
-
-  function capturePhoto() {
-    if (!_cameraActive) return;
-    canvas.width  = video.videoWidth  || 640;
-    canvas.height = video.videoHeight || 480;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    canvas.toBlob(blob => {
-      _capturedBlob = blob;
-      photoPreview.src = URL.createObjectURL(blob);
-      photoContainer.style.display = 'block';
-      setStatus('info','📸 Foto diambil. Klik Ulangi untuk mengambil ulang, atau Gunakan Foto untuk melanjutkan.');
-      setCameraUI('captured');
-      updatePeriksa();
-    }, 'image/jpeg', 0.92);
-  }
-
-  function retakePhoto() {
-    _capturedBlob = null;
-    photoPreview.src = '';
-    photoContainer.style.display = 'none';
-    setStatus('info','📷 Kamera siap. Arahkan ke dinding, lalu klik Ambil Foto.');
-    setCameraUI('live');
-    updatePeriksa();
-  }
-
-  function usePhoto() {
-    if (!_capturedBlob) return;
-    stopCamera(false);
-    setStatus('info','✅ Foto siap digunakan. Klik Periksa Dinding untuk memulai analisis.');
-    setCameraUI('confirmed');
-    updatePeriksa();
-  }
-
-  function stopCamera(clearCapture = true) {
-    if (_stream) { _stream.getTracks().forEach(t => t.stop()); _stream = null; }
-    video.srcObject = null; video.style.display = 'none';
-    placeholder.style.display = 'flex';
-    _cameraActive = false;
-    if (clearCapture) {
-      _capturedBlob = null;
-      photoPreview.src = '';
-      photoContainer.style.display = 'none';
-      setStatus('info','💡 Klik Buka Kamera untuk memulai kembali.');
-      setCameraUI('idle');
-    }
-    updatePeriksa();
-  }
-
-  function setCameraUI(state) {
-    const show = (el, vis) => el.style.display = vis ? 'inline-flex' : 'none';
-    show(btnBuka,   state === 'idle');
-    show(btnAmbil,  state === 'live');
-    show(btnUlangi, state === 'captured');
-    show(btnGunakan,state === 'captured');
-    show(btnTutup,  state === 'live' || state === 'captured');
-  }
-
-  function setStatus(type, html) {
-    cameraStatus.className = `camera-status ${type}`;
-    cameraStatus.innerHTML = html;
-  }
-
-  // ── Upload ───────────────────────────────────────────────────────────────────
-  dropZone.addEventListener('click', () => fileInput.click());
-  browseTrigger.addEventListener('click', e => { e.stopPropagation(); fileInput.click(); });
-  dropZone.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' '){ e.preventDefault(); fileInput.click(); } });
-
-  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-  dropZone.addEventListener('drop', e => {
-    e.preventDefault(); dropZone.classList.remove('dragover');
-    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-  });
-
-  fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
-
-  function handleFile(file) {
-    const valid = ['image/png','image/jpeg','image/bmp','image/webp','image/gif'];
-    if (!valid.includes(file.type) && !file.type.startsWith('image/')) {
-      showToast('Format file tidak didukung. Gunakan PNG, JPG, BMP, atau WEBP.', 'error'); return;
-    }
-    if (file.size > 16 * 1024 * 1024) {
-      showToast('Ukuran file melebihi 16MB.', 'error'); return;
-    }
-    _uploadedFile = file;
-    const reader = new FileReader();
-    reader.onload = e => {
-      previewImg.src = e.target.result;
-      previewWrap.style.display = 'block';
-      dropZone.style.display = 'none';
-      filenameLbl.textContent = file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)';
-      updatePeriksa();
-    };
-    reader.readAsDataURL(file);
-  }
-
-  btnHapusFoto.addEventListener('click', () => {
-    _uploadedFile = null;
-    fileInput.value = '';
-    previewImg.src = '';
-    previewWrap.style.display = 'none';
-    dropZone.style.display = 'block';
-    updatePeriksa();
-  });
-
-  // ── Periksa ──────────────────────────────────────────────────────────────────
-  function updatePeriksa() {
-    let ready = false;
-    if (_activePanel === 'panel-kamera') ready = _capturedBlob !== null;
-    if (_activePanel === 'panel-unggah') ready = _uploadedFile !== null;
-    btnPeriksa.disabled = !ready;
-  }
-
-  btnPeriksa.addEventListener('click', async () => {
-    let blob = null;
-    let filename = 'photo.jpg';
-
-    if (_activePanel === 'panel-kamera' && _capturedBlob) {
-      blob = _capturedBlob; filename = 'camera_photo.jpg';
-    } else if (_activePanel === 'panel-unggah' && _uploadedFile) {
-      blob = _uploadedFile; filename = _uploadedFile.name;
-    }
-
-    if (!blob) { showToast('Pilih atau ambil foto terlebih dahulu.', 'error'); return; }
-
-    // Show loading
-    loadingOverlay.classList.add('show');
-    btnPeriksa.disabled = true;
-    btnPeriksa.querySelector('.periksa-icon').style.display = 'none';
-    btnPeriksa.querySelector('.btn-spinner').style.display  = 'inline-block';
-    btnPeriksa.querySelector('.periksa-text').textContent   = 'Menganalisis...';
-
-    const fd = new FormData();
-    fd.append('file', blob, filename);
-    fd.append('conf', '0.5');
-
-    try {
-      const res  = await fetch('/predict', { method: 'POST', body: fd });
-      const data = await res.json();
-
-      if (!res.ok && !data.status) {
-        throw new Error(data.error || 'Respons server tidak valid.');
-      }
-
-      // Simpan hasil ke sessionStorage lalu redirect ke halaman hasil
-      sessionStorage.setItem('moldguard_result', JSON.stringify(data));
-      window.location.href = '/hasil';
-
-    } catch (err) {
-      loadingOverlay.classList.remove('show');
-      showToast('Gagal: ' + err.message, 'error');
-    } finally {
-      btnPeriksa.disabled = false;
-      btnPeriksa.querySelector('.periksa-icon').style.display = '';
-      btnPeriksa.querySelector('.btn-spinner').style.display  = 'none';
-      btnPeriksa.querySelector('.periksa-text').textContent   = 'Periksa Dinding';
-    }
-  });
-
-  // ── Toast ────────────────────────────────────────────────────────────────────
-  function showToast(msg, type='info') {
-    const t = document.createElement('div');
-    const bg = type==='error' ? '#dc2626' : '#16a34a';
-    t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-      background:${bg};color:#fff;padding:12px 22px;border-radius:8px;
-      font-size:.88rem;font-weight:500;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);
-      max-width:90vw;text-align:center;`;
-    t.textContent = msg;
-    document.body.appendChild(t);
-    setTimeout(() => t.remove(), 4000);
-  }
-
-  // ── Hamburger ────────────────────────────────────────────────────────────────
-  const hamburger = document.getElementById('hamburger');
-  const mobileNav = document.getElementById('mobile-nav');
-  hamburger.addEventListener('click', () => {
-    const open = hamburger.classList.toggle('open');
-    mobileNav.classList.toggle('open', open);
-    hamburger.setAttribute('aria-expanded', String(open));
-    mobileNav.setAttribute('aria-hidden', String(!open));
-  });
-
-  // ── On unload: stop stream ──
-  window.addEventListener('beforeunload', () => { if (_stream) _stream.getTracks().forEach(t => t.stop()); });
-
-  </script>
-</body>
-</html>
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/detection.js') }}"></script>
+{% endblock %}

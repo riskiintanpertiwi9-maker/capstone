@@ -28,10 +28,11 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Train YOLOv8 for mold detection"
     )
-    parser.add_argument("--model", type=str, default="yolov8n.pt",
+    parser.add_argument("--model", type=str,
+                        default=str(BASE_DIR / "models" / "yolo" / "yolov8n.pt"),
                         help="Pretrained model")
     parser.add_argument("--data", type=str,
-                        default=str(BASE_DIR / "datasets" / "trained" / "data.yaml"),
+                        default=str(BASE_DIR / "datasets" / "yolo" / "data.yaml"),
                         help="Path to data.yaml")
     parser.add_argument("--epochs", type=int, default=15,
                         help="Number of training epochs (default 15, hemat waktu CPU)")
@@ -57,6 +58,8 @@ def parse_args():
                         help="Cache gambar agar epoch berikutnya lebih cepat")
     parser.add_argument("--lr0", type=float, default=None,
                         help="Learning rate awal (mis. 0.001 untuk fine-tuning)")
+    parser.add_argument("--optimizer", type=str, default="auto",
+                        help="Optimizer: auto | SGD | Adam | AdamW (auto mengabaikan lr0)")
     return parser.parse_args()
 
 
@@ -98,6 +101,7 @@ def train(args):
         fraction=args.fraction,
         cache=False if args.cache == "none" else args.cache,
         lr0=args.lr0 if args.lr0 else 0.01,
+        optimizer=args.optimizer,
         save=True,
         plots=True,
         verbose=True,

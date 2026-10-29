@@ -1,13 +1,9 @@
 {
   "class_names": [
-    "Alternaria spp",
-    "Aspergillus",
-    "Chaetomium globosum",
-    "Cladosporium spp",
-    "Normal Wall",
-    "Penicillium chrysogenum",
-    "Stachybotrys chartarum",
-    "Trichoderma spp",
-    "Wallemia spp"
+    "aspfla",
+    "aspfum",
+    "clado",
+    "fussp",
+    "peni"
   ]
 }

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% set page = "edukasi" %}
+{% set page_title = "Tips & Edukasi" %}
+{% set page_subtitle = article.category %}
+{% block title %}{{ article.title }}{% endblock %}
+{% block description %}{{ article.excerpt }}{% endblock %}
+
+{% block content %}
+<div class="article-page">
+  <a class="back-link back-link--inline" href="{{ url_for('edukasi') }}">{{ icon('arrow-left', 18) }} Kembali ke Tips &amp; Edukasi</a>
+
+  <article class="card article-hero">
+    <div class="article-hero__art tone-{{ (article.slug|length) % 4 }}" aria-hidden="true">
+      {{ icon(article.icon, 74) }}
+    </div>
+    <div class="article-hero__body">
+      <div class="article-hero__meta">
+        <span class="badge badge--soft">{{ article.category }}</span>
+        <span class="muted-small">{{ icon('clock', 14) }} {{ article.minutes }} menit baca</span>
+      </div>
+      <h1 class="article-title">{{ article.title }}</h1>
+      <p class="lead">{{ article.excerpt }}</p>
+    </div>
+  </article>
+
+  <div class="article-layout">
+    <article class="card article-content">
+      {% for section in article.body %}
+        <section class="article-section">
+          <h2>{{ section.heading }}</h2>
+          <p>{{ section.text }}</p>
+        </section>
+      {% endfor %}
+
+      <div class="article-cta">
+        <div>
+          <h2 class="card-title">Sudah memeriksa area Anda?</h2>
+          <p class="muted-small">Gunakan foto area yang dicurigai untuk melihat apakah model menandai indikasi jamur.</p>
+        </div>
+        <a class="btn btn--primary btn--sm" href="{{ url_for('deteksi') }}">{{ icon('camera', 16) }} Mulai Deteksi</a>
+      </div>
+
+      <p class="card-note">
+        {{ icon('info', 14) }}
+        <span>Konten ini bersifat edukatif dan tidak menggantikan pemeriksaan tenaga kesehatan atau ahli bangunan.</span>
+      </p>
+    </article>
+
+    <aside class="stack">
+      <section class="card">
+        <div class="card-head">
+          <h2 class="card-title">Sumber &amp; Referensi</h2>
+          <span class="tile tile--blue">{{ icon('file', 18) }}</span>
+        </div>
+        <ol class="source-list">
+          {% for source in article.sources %}
+            <li>{{ source }}</li>
+          {% endfor %}
+        </ol>
+        <p class="card-note">{{ icon('info', 14) }} <span>Referensi dicantumkan agar klaim teknis dapat diperiksa kembali.</span></p>
+      </section>
+
+      <section class="card card--mint">
+        <h2 class="card-title">Ingat</h2>
+        <ul class="dot-list">
+          <li>Jamur tumbuh subur di tempat lembap dan kurang ventilasi.</li>
+          <li>Perbaiki sumber air, bukan hanya noda di permukaannya.</li>
+          <li>Gunakan pelindung diri saat membersihkan area luas.</li>
+          <li>Hasil AI adalah indikasi visual, bukan diagnosis.</li>
+        </ul>
+      </section>
+    </aside>
+  </div>
+
+  <section class="related-block" aria-labelledby="related-title">
+    <div class="section-head">
+      <h2 class="section-title" id="related-title">Artikel Lainnya</h2>
+      <a class="link-arrow" href="{{ url_for('edukasi') }}">Semua artikel {{ icon('arrow-right', 15) }}</a>
+    </div>
+    <div class="article-grid article-grid--three">
+      {% for item in related %}
+        <a class="article-card article-card--compact" href="{{ url_for('edukasi_detail', slug=item.slug) }}">
+          <span class="article-card__media tone-{{ loop.index0 % 4 }}" aria-hidden="true">{{ icon(item.icon, 34) }}</span>
+          <span class="article-card__body">
+            <span class="badge badge--soft">{{ item.category }}</span>
+            <span class="article-card__title">{{ item.title }}</span>
+            <span class="link-arrow">Baca Artikel {{ icon('arrow-right', 15) }}</span>
+          </span>
+        </a>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

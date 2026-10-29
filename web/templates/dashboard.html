@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% set page = "dashboard" %}
+{% set page_title = "Beranda" %}
+{% set page_subtitle = "Ringkasan pemeriksaan rumah Anda" %}
+{% block title %}Beranda{% endblock %}
+
+{% block content %}
+<section class="page-head dashboard-head">
+  <div>
+    <h1 class="display">Halo, <span id="greeting-name">Pengguna MoldGuard</span>!</h1>
+    <p class="lead">Pantau kondisi rumah Anda untuk lingkungan yang lebih sehat.</p>
+  </div>
+</section>
+
+<section class="hero-grid">
+  <article class="hero-banner">
+    <div class="hero-banner__content">
+      <span class="hero-banner__eyebrow">{{ icon('leaf', 15) }} MoldGuard</span>
+      <h2>Deteksi Jamur dengan Mudah dan Cepat</h2>
+      <p>Jaga rumah tetap bersih dan sehat bersama MoldGuard. Unggah foto, lihat indikasi, lalu ambil langkah pencegahan.</p>
+      <a class="btn btn--light" href="{{ url_for('deteksi') }}">
+        Mulai Deteksi Sekarang {{ icon('arrow-right', 17) }}
+      </a>
+    </div>
+    <div class="hero-banner__art" aria-hidden="true">
+      <span class="hero-orb hero-orb--a"></span>
+      <span class="hero-orb hero-orb--b"></span>
+      <span class="hero-leaf">{{ icon('leaf', 120) }}</span>
+    </div>
+  </article>
+
+  <article class="card summary-card">
+    <div class="card-head">
+      <div>
+        <h2 class="card-title">Ringkasan Pemeriksaan</h2>
+        <p class="card-sub">Berdasarkan pemeriksaan yang Anda simpan di perangkat ini.</p>
+      </div>
+      <span class="tile tile--mint">{{ icon('activity', 20) }}</span>
+    </div>
+    <div class="summary-card__body">
+      <div class="summary-main">
+        <span class="summary-main__value" id="summary-total">0</span>
+        <span class="summary-main__label">total pemeriksaan</span>
+        <span class="chip chip--success" id="summary-last" hidden></span>
+      </div>
+      <div class="summary-split">
+        <div class="summary-split__item">
+          <span class="summary-split__value" id="summary-mold">0</span>
+          <span class="summary-split__label">indikasi jamur</span>
+        </div>
+        <div class="summary-split__item">
+          <span class="summary-split__value" id="summary-clean">0</span>
+          <span class="summary-split__label">tanpa indikasi</span>
+        </div>
+      </div>
+    </div>
+    <p class="card-note">
+      {{ icon('info', 14) }}
+      <span>Angka ini berasal dari riwayat lokal, bukan sensor kualitas udara.</span>
+    </p>
+  </article>
+</section>
+
+<section class="quick-grid" aria-label="Akses cepat">
+  <a class="action-card" href="{{ url_for('deteksi') }}">
+    <span class="tile tile--mint">{{ icon('camera', 20) }}</span>
+    <span>
+      <span class="action-card__title">Deteksi Jamur</span>
+      <span class="action-card__text">Scan area menggunakan kamera</span>
+    </span>
+    {{ icon('chevron-right', 18, 'action-card__chevron') }}
+  </a>
+  <a class="action-card" href="{{ url_for('riwayat') }}">
+    <span class="tile tile--blue">{{ icon('history', 20) }}</span>
+    <span>
+      <span class="action-card__title">Riwayat</span>
+      <span class="action-card__text">Lihat riwayat hasil deteksi</span>
+    </span>
+    {{ icon('chevron-right', 18, 'action-card__chevron') }}
+  </a>
+  <a class="action-card" href="{{ url_for('laporan') }}">
+    <span class="tile tile--blue">{{ icon('file', 20) }}</span>
+    <span>
+      <span class="action-card__title">Laporan</span>
+      <span class="action-card__text">Ringkasan hasil pemeriksaan</span>
+    </span>
+    {{ icon('chevron-right', 18, 'action-card__chevron') }}
+  </a>
+  <a class="action-card" href="{{ url_for('edukasi') }}">
+    <span class="tile tile--amber">{{ icon('lightbulb', 20) }}</span>
+    <span>
+      <span class="action-card__title">Tips &amp; Edukasi</span>
+      <span class="action-card__text">Cara mencegah jamur di rumah</span>
+    </span>
+    {{ icon('chevron-right', 18, 'action-card__chevron') }}
+  </a>
+  <a class="action-card" href="{{ url_for('pengingat') }}">
+    <span class="tile tile--rose">{{ icon('bell', 20) }}</span>
+    <span>
+      <span class="action-card__title">Pengingat</span>
+      <span class="action-card__text">Atur jadwal perawatan</span>
+    </span>
+    {{ icon('chevron-right', 18, 'action-card__chevron') }}
+  </a>
+</section>
+
+<div class="dashboard-columns">
+  <div class="stack">
+    <section class="card">
+      <div class="card-head">
+        <h2 class="card-title">Hasil Deteksi Terbaru</h2>
+        <a class="link-arrow" href="{{ url_for('riwayat') }}">Lihat semua {{ icon('arrow-right', 15) }}</a>
+      </div>
+      <div id="latest-list" class="latest-list">
+        <div class="empty-state empty-state--compact">
+          <span class="empty-state__icon">{{ icon('scan', 24) }}</span>
+          <p>Belum ada pemeriksaan</p>
+          <a class="btn btn--primary btn--sm" href="{{ url_for('deteksi') }}">Mulai Deteksi Pertama</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h2 class="card-title">Statistik Deteksi</h2>
+          <p class="card-sub">Jumlah pemeriksaan yang tersimpan.</p>
+        </div>
+        <label class="select-pill">
+          <span class="sr-only">Rentang statistik</span>
+          <select id="stats-range">
+            <option value="7">7 Hari Terakhir</option>
+            <option value="30">30 Hari Terakhir</option>
+            <option value="90">3 Bulan Terakhir</option>
+          </select>
+        </label>
+      </div>
+      <div class="chart-wrap" id="stats-chart" role="img" aria-label="Grafik jumlah pemeriksaan"></div>
+      <div class="stat-legend" id="stats-legend">
+        <span class="stat-legend__item"><i class="legend-dot legend-dot--green"></i> Total pemeriksaan</span>
+        <span class="stat-legend__item"><i class="legend-dot legend-dot--red"></i> Indikasi jamur</span>
+      </div>
+      <p class="card-note" id="stats-note" hidden></p>
+    </section>
+  </div>
+
+  <div class="stack">
+    <section class="card" id="tips-card">
+      <div class="card-head">
+        <h2 class="card-title">Tips Harian</h2>
+        <a class="link-arrow" href="{{ url_for('edukasi') }}">Lihat semua {{ icon('arrow-right', 15) }}</a>
+      </div>
+      <a class="tips-feature" href="{{ url_for('edukasi_detail', slug=featured_article.slug) }}">
+        <span class="tips-feature__media tile--mint" aria-hidden="true">{{ icon('leaf', 40) }}</span>
+        <span class="tips-feature__body">
+          <span class="badge badge--soft">{{ featured_article.category }}</span>
+          <span class="tips-feature__title">{{ featured_article.title }}</span>
+          <span class="tips-feature__text">{{ featured_article.excerpt }}</span>
+        </span>
+      </a>
+      <div class="tips-dots" aria-hidden="true"><span class="is-active"></span><span></span><span></span></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2 class="card-title">Pengingat Selanjutnya</h2>
+        <a class="link-arrow" href="{{ url_for('pengingat') }}">Lihat semua {{ icon('arrow-right', 15) }}</a>
+      </div>
+      <div id="reminder-list" class="reminder-mini-list">
+        <div class="empty-state empty-state--compact">
+          <span class="empty-state__icon">{{ icon('bell', 24) }}</span>
+          <p>Belum ada pengingat aktif</p>
+          <a class="btn btn--secondary btn--sm" href="{{ url_for('pengingat') }}">Tambah Pengingat</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

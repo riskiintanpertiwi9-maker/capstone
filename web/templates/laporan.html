@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% set page = "laporan" %}
+{% set page_title = "Laporan" %}
+{% set page_subtitle = "Ringkasan pemeriksaan dalam rentang tanggal" %}
+{% block title %}Laporan{% endblock %}
+
+{% block content %}
+<section class="page-head page-head--split">
+  <div class="page-head__lead">
+    <h1 class="page-title">Laporan</h1>
+    <p class="lead">Rangkuman pemeriksaan yang Anda simpan, dihitung langsung dari riwayat di perangkat ini.</p>
+  </div>
+  <div class="page-head__actions">
+    <button class="btn btn--secondary btn--sm" id="btn-print-report" type="button">{{ icon('download', 16) }} Cetak / Simpan PDF</button>
+  </div>
+</section>
+
+<section class="card report-controls" aria-label="Rentang laporan">
+  <div class="range-presets" role="group" aria-label="Pilih rentang cepat">
+    <button class="pill is-active" type="button" data-days="7" aria-pressed="true">7 Hari</button>
+    <button class="pill" type="button" data-days="30" aria-pressed="false">30 Hari</button>
+    <button class="pill" type="button" data-days="90" aria-pressed="false">3 Bulan</button>
+    <button class="pill" type="button" data-days="365" aria-pressed="false">1 Tahun</button>
+  </div>
+  <div class="range-fields">
+    <label class="field-inline">
+      <span>Dari</span>
+      <input type="date" id="range-from" />
+    </label>
+    <label class="field-inline">
+      <span>Sampai</span>
+      <input type="date" id="range-to" />
+    </label>
+    <button class="btn btn--secondary btn--sm" id="btn-apply-range" type="button">Terapkan</button>
+  </div>
+</section>
+
+<section class="card empty-state empty-state--page" id="report-empty" hidden>
+  <span class="empty-state__icon">{{ icon('file', 28) }}</span>
+  <h2 class="empty-state__title">Belum ada laporan</h2>
+  <p class="empty-state__text">Laporan dibuat dari riwayat pemeriksaan Anda. Simpan hasil deteksi pertama untuk melihat ringkasan di sini.</p>
+  <a class="btn btn--primary" href="{{ url_for('deteksi') }}">{{ icon('camera', 17) }} Mulai Deteksi</a>
+</section>
+
+<div id="report-body">
+  <section class="metric-grid" aria-label="Ringkasan angka">
+    <article class="metric-card">
+      <span class="tile tile--mint">{{ icon('scan', 19) }}</span>
+      <p class="metric-card__value" id="metric-total">0</p>
+      <p class="metric-card__label">Total Deteksi</p>
+      <p class="metric-card__note">Dalam rentang terpilih</p>
+    </article>
+    <article class="metric-card">
+      <span class="tile tile--rose">{{ icon('mushroom', 19) }}</span>
+      <p class="metric-card__value" id="metric-mold">0</p>
+      <p class="metric-card__label">Indikasi Jamur</p>
+      <p class="metric-card__note">Status model: terindikasi</p>
+    </article>
+    <article class="metric-card">
+      <span class="tile tile--blue">{{ icon('check-circle', 19) }}</span>
+      <p class="metric-card__value" id="metric-clean">0</p>
+      <p class="metric-card__label">Tanpa Indikasi</p>
+      <p class="metric-card__note">Status model: tidak terindikasi</p>
+    </article>
+    <article class="metric-card">
+      <span class="tile tile--amber">{{ icon('map-pin', 19) }}</span>
+      <p class="metric-card__value" id="metric-rooms">0</p>
+      <p class="metric-card__label">Lokasi Berbeda</p>
+      <p class="metric-card__note">Berdasarkan lokasi yang diisi</p>
+    </article>
+  </section>
+
+  <div class="report-grid">
+    <section class="card">
+      <div class="card-head card-head--wrap">
+        <div>
+          <h2 class="card-title">Tren Pemeriksaan</h2>
+          <p class="card-sub" id="trend-range">—</p>
+        </div>
+        <span class="badge badge--soft">{{ icon('activity', 13) }} Data aktual</span>
+      </div>
+      <div class="chart-wrap" id="trend-chart" role="img" aria-label="Grafik tren pemeriksaan"></div>
+      <div class="stat-legend">
+        <span class="stat-legend__item"><i class="legend-dot legend-dot--green"></i> Total pemeriksaan</span>
+        <span class="stat-legend__item"><i class="legend-dot legend-dot--red"></i> Indikasi jamur</span>
+      </div>
+      <p class="card-note" id="trend-note" hidden></p>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2 class="card-title">Distribusi Hasil</h2>
+        <span class="badge badge--neutral">Per status model</span>
+      </div>
+      <div class="donut-wrap">
+        <div class="donut" id="report-donut" role="img" aria-label="Distribusi hasil pemeriksaan">
+          <span class="donut__center">
+            <strong id="donut-total">0</strong>
+            <small>pemeriksaan</small>
+          </span>
+        </div>
+        <ul class="donut-legend" id="donut-legend"></ul>
+      </div>
+      <p class="card-note">
+        {{ icon('info', 14) }}
+        <span>Distribusi hanya menghitung pemeriksaan yang tersimpan. Tidak ada penilaian risiko kesehatan.</span>
+      </p>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h2 class="card-title">Analisis per Ruangan</h2>
+        <p class="card-sub">Dikelompokkan dari kolom lokasi yang Anda isi.</p>
+      </div>
+      <a class="link-arrow" href="{{ url_for('deteksi') }}">Periksa area baru {{ icon('arrow-right', 15) }}</a>
+    </div>
+    <div class="room-list" id="room-list"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2 class="card-title">Laporan Terbaru</h2>
+      <a class="link-arrow" href="{{ url_for('riwayat') }}">Lihat semua {{ icon('arrow-right', 15) }}</a>
+    </div>
+    <div class="report-recent" id="report-recent"></div>
+  </section>
+
+  <p class="privacy-note report-print-note">
+    {{ icon('info', 14) }}
+    <span>Tombol “Cetak / Simpan PDF” membuka dialog cetak browser. Angka pada laporan berasal dari riwayat lokal Anda.</span>
+  </p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/laporan.js') }}"></script>
+{% endblock %}

@@ -4,11 +4,19 @@ MoldGuard — Flask Web Application
 Website deteksi jamur dinding berbasis AI (YOLOv8 + MobileNetV2).
 
 Endpoint:
-  GET  /           → Beranda
-  GET  /deteksi    → Halaman deteksi (upload/kamera)
-  POST /predict    → Proses gambar dan jalankan model
-  GET  /tentang    → Halaman tentang MoldGuard
-  GET  /health     → Health check API
+  GET  /                 → Beranda / dashboard
+  GET  /deteksi          → Halaman deteksi (kamera/galeri)
+  GET  /hasil            → Hasil deteksi (data dari browser)
+  GET  /riwayat          → Riwayat pemeriksaan
+  GET  /laporan          → Ringkasan & laporan
+  GET  /edukasi          → Tips & edukasi
+  GET  /edukasi/<slug>   → Detail artikel
+  GET  /pengingat        → Pengingat perawatan
+  GET  /profil           → Profil perangkat
+  GET  /pengaturan       → Preferensi aplikasi
+  GET  /tentang          → Tentang MoldGuard
+  POST /predict          → Proses gambar dan jalankan model
+  GET  /health           → Health check API
 """
 
 import os
@@ -33,9 +41,14 @@ import cv2
 import numpy as np
 from flask import (
     Flask, render_template, request,
-    jsonify, redirect, url_for
+    jsonify, redirect, url_for, abort
 )
 from werkzeug.utils import secure_filename
+
+try:  # dijalankan sebagai paket (python -m web.app)
+    from .articles import ARTICLES, ARTICLES_BY_SLUG, CATEGORIES
+except ImportError:  # dijalankan langsung (python web/app.py)
+    from articles import ARTICLES, ARTICLES_BY_SLUG, CATEGORIES
 
 # ── App Setup ──────────────────────────────────────────────────────────────────
 UPLOAD_DIR = BASE_DIR / "web" / "static" / "uploads"
@@ -51,11 +64,22 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024   # 16 MB
 # Preprocessing classifier: resize 224 → Gaussian blur → /255 (sama seperti training).
 MOBILE_IMGSZ        = 224
 MOBILE_BLUR_KERNEL  = 5
-CLEAN_CLASSES       = {"normal wall", "clean"}
-CLEAN_BOX_VETO      = 0.55   # box dibuang bila classifier yakin ini dinding bersih
-CLEAN_IMAGE_CONF    = 0.60   # seluruh gambar dianggap bersih bila Normal Wall >= ini
 MAX_BOX_AREA        = 0.92   # box nyaris menutupi seluruh foto dianggap bukan jamur spesifik
 YOLO_IMGSZ          = 416    # samakan dengan ukuran training
+
+# Dataset classifier hanya berisi 5 jenis jamur (tanpa kelas dinding bersih).
+# Kode folder dataset dipetakan ke nama yang ditampilkan di UI.
+SPECIES_DISPLAY = {
+    "aspfla": "Aspergillus flavus",
+    "aspfum": "Aspergillus fumigatus",
+    "clado":  "Cladosporium spp",
+    "fussp":  "Fusarium spp",
+    "peni":   "Penicillium spp",
+}
+
+
+def display_name(name: str) -> str:
+    return SPECIES_DISPLAY.get(str(name).strip().lower(), str(name))
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
@@ -159,8 +183,8 @@ def read_image_from_request(file_storage) -> np.ndarray:
 def run_yolo_inference(img_bgr: np.ndarray, conf: float):
     """Jalankan YOLO; kembalikan deteksi + crop area untuk verifikasi classifier."""
     model   = _load_yolo()
-    result  = model.predict(img_bgr, conf=conf, iou=0.45, imgsz=YOLO_IMGSZ,
-                            verbose=False)[0]
+    result  = model.predict(img_bgr, conf=conf, iou=0.30, imgsz=YOLO_IMGSZ,
+                            max_det=30, verbose=False)[0]
     boxes   = result.boxes
     h, w    = img_bgr.shape[:2]
     img_area = float(h * w)
@@ -175,6 +199,9 @@ def run_yolo_inference(img_bgr: np.ndarray, conf: float):
                 continue
             # Box raksasa (nyaris seluruh foto) bukan deteksi jamur yang presisi.
             if ((x2 - x1) * (y2 - y1)) / img_area > MAX_BOX_AREA:
+                continue
+            # Bintik terlalu kecil (<0.06% gambar) biasanya noise tekstur.
+            if ((x2 - x1) * (y2 - y1)) / img_area < 0.0006:
                 continue
             detections.append({
                 "class":      result.names[int(box.cls)],
@@ -210,7 +237,7 @@ def _preprocess_crop(crop_bgr: np.ndarray) -> np.ndarray:
 
 
 def classify_crops(crops):
-    """Klasifikasi tiap crop YOLO secara terpisah (untuk verifikasi box)."""
+    """Klasifikasi tiap crop YOLO (menentukan spesies jamur pada box)."""
     if not crops:
         return []
     model, classes = _load_mobile()
@@ -226,86 +253,97 @@ def classify_crops(crops):
     ]
 
 
-def run_mobile_inference(img_bgr: np.ndarray, crop_probs=None):
-    """Ringkasan probabilitas: rata-rata crop terverifikasi, atau seluruh gambar."""
+def run_mobile_inference(crop_probs):
+    """Rata-rata probabilitas crop di dalam box (spesies jamur)."""
     model, classes = _load_mobile()
-
-    if crop_probs:
-        probs = np.mean([p["probs"] for p in crop_probs], axis=0)
-    else:
-        batch = _preprocess_crop(img_bgr)[np.newaxis, ...]
-        probs = model.predict(batch, verbose=0)[0]
-
-    return [{"class": c, "confidence": round(float(p), 4)}
+    probs = np.mean([p["probs"] for p in crop_probs], axis=0)
+    return [{"class": display_name(c), "confidence": round(float(p), 4)}
             for c, p in zip(classes, probs)]
 
 
-def determine_status(yolo_dets, mobile_results, whole_results=None):
+def determine_status(yolo_dets):
     """
-    Tentukan status dari hasil model sesungguhnya.
+    Tentukan status hanya dari deteksi YOLO.
 
-    Aturan penting: jamur hanya dinyatakan bila YOLO menemukan box yang lolos
-    verifikasi. Klasifikasi global sendirian tidak boleh menandai dinding
-    bersih sebagai berjamur.
+    Dataset classifier hanya berisi 5 jenis jamur (tanpa kelas dinding bersih),
+    sehingga klasifikasi global tidak boleh dipakai untuk menyatakan jamur.
+    Dinding bersih aman karena YOLO tidak menghasilkan box di sana.
 
-    Returns: 'mold_detected' | 'no_mold' | 'uncertain'
+    Returns: 'mold_detected' | 'no_mold'
     """
-    has_mold_yolo = any(d["class"].lower() == "mold" for d in (yolo_dets or []))
-
-    top_mobile = None
-    if mobile_results:
-        top_mobile = max(mobile_results, key=lambda x: x["confidence"])
-
-    whole_top = None
-    if whole_results:
-        whole_top = max(whole_results, key=lambda x: x["confidence"])
-
-    whole_clean = (
-        whole_top is not None
-        and whole_top["class"].lower() in CLEAN_CLASSES
-        and whole_top["confidence"] >= CLEAN_IMAGE_CONF
+    has_mold_yolo = any(
+        str(d.get("class", "")).strip().lower() == "mold" for d in (yolo_dets or [])
     )
-    crop_clean = (
-        top_mobile is not None
-        and top_mobile["class"].lower() in CLEAN_CLASSES
-    )
-
-    # Dinding bersih: jangan pernah dilaporkan ada jamur.
-    if whole_clean and not has_mold_yolo:
-        return "no_mold"
-    # Classifier global sangat yakin dinding bersih → tetap aman.
-    if whole_clean and whole_top["confidence"] >= 0.75:
-        return "no_mold"
-
-    if has_mold_yolo:
-        return "mold_detected"
-
-    # Tanpa box YOLO, klasifikasi global tidak cukup untuk menyatakan jamur.
-    if crop_clean or whole_clean:
-        return "no_mold"
-    return "uncertain"
+    return "mold_detected" if has_mold_yolo else "no_mold"
 
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
 @app.route("/")
+@app.route("/dashboard")
 def beranda():
-    return render_template("beranda.html")
+    return render_template("dashboard.html", page="dashboard", featured_article=ARTICLES[0])
 
 
 @app.route("/deteksi")
 def deteksi():
-    return render_template("deteksi.html")
-
-
-@app.route("/tentang")
-def tentang():
-    return render_template("tentang.html")
+    return render_template("deteksi.html", page="deteksi")
 
 
 @app.route("/hasil")
 def hasil():
-    """Halaman hasil statis (ditampilkan via JS setelah POST /predict berhasil)."""
-    return render_template("hasil.html")
+    """Halaman hasil. Data hasil dibaca dari browser (session/local storage)."""
+    return render_template("hasil.html", page="hasil")
+
+
+@app.route("/riwayat")
+def riwayat():
+    return render_template("riwayat.html", page="riwayat")
+
+
+@app.route("/laporan")
+def laporan():
+    return render_template("laporan.html", page="laporan")
+
+
+@app.route("/edukasi")
+def edukasi():
+    featured = next((a for a in ARTICLES if a.get("featured")), ARTICLES[0])
+    return render_template(
+        "edukasi.html", page="edukasi",
+        articles=ARTICLES, categories=CATEGORIES, featured=featured,
+    )
+
+
+@app.route("/edukasi/<slug>")
+def edukasi_detail(slug):
+    article = ARTICLES_BY_SLUG.get(slug)
+    if article is None:
+        return redirect(url_for("edukasi"))
+    related = [a for a in ARTICLES if a["slug"] != slug][:3]
+    return render_template(
+        "edukasi_detail.html", page="edukasi",
+        article=article, related=related,
+    )
+
+
+@app.route("/pengingat")
+def pengingat():
+    return render_template("pengingat.html", page="pengingat")
+
+
+@app.route("/profil")
+def profil():
+    return render_template("profil.html", page="profil")
+
+
+@app.route("/pengaturan")
+def pengaturan():
+    return render_template("pengaturan.html", page="pengaturan")
+
+
+@app.route("/tentang")
+def tentang():
+    return render_template("tentang.html", page="tentang")
 
 
 @app.route("/predict", methods=["POST"])
@@ -321,7 +359,7 @@ def predict():
     if not allowed_file(f.filename):
         return jsonify({"error": "Format file tidak didukung. Gunakan PNG, JPG, JPEG, BMP, atau WEBP."}), 400
 
-    conf = float(request.form.get("conf", 0.5))
+    conf = float(request.form.get("conf", 0.35))
     conf = max(0.1, min(0.9, conf))
 
     # ── Baca gambar ──
@@ -337,7 +375,7 @@ def predict():
     original_b64 = img_to_b64(img_bgr)
 
     resp = {
-        "status":          "uncertain",
+        "status":          "no_mold",
         "original_image":  original_b64,
         "annotated_image": None,
         "yolo":            None,
@@ -347,28 +385,21 @@ def predict():
         "error_details":   [],
     }
 
-    # ── YOLOv8 + verifikasi crop ──
-    yolo_crops, crop_probs, dropped = [], [], 0
+    # ── YOLOv8 + klasifikasi crop ──
+    yolo_crops, crop_probs = [], []
     if _yolo_available():
         try:
             dets, yolo_crops = run_yolo_inference(img_bgr, conf)
 
-            # Verifikasi tiap box dengan classifier: box di dinding bersih dibuang.
+            # Setiap box yang lolos filter YOLO adalah kandidat jamur.
+            # Classifier hanya menentukan spesiesnya, tidak membuang box,
+            # karena dataset classifier tidak punya kelas dinding bersih.
             if yolo_crops and _mobile_available() and _tf_available:
                 per_crop = classify_crops(yolo_crops)
-                kept_dets, kept_probs = [], []
                 for det, prob in zip(dets, per_crop):
-                    if (prob["class"].lower() in CLEAN_CLASSES
-                            and prob["confidence"] >= CLEAN_BOX_VETO):
-                        dropped += 1
-                        continue
-                    det["species"] = prob["class"]
+                    det["species"] = display_name(prob["class"])
                     det["species_confidence"] = round(prob["confidence"], 4)
-                    kept_dets.append(det)
-                    kept_probs.append(prob)
-                dets, crop_probs = kept_dets, kept_probs
-                if dropped:
-                    log.info("Classifier membuang %d box yang terindikasi dinding bersih.", dropped)
+                crop_probs = per_crop
 
             resp["yolo"] = dets
             resp["annotated_image"] = img_to_b64(draw_detections(img_bgr, dets))
@@ -378,28 +409,24 @@ def predict():
     else:
         resp["error_details"].append("Model YOLOv8 belum tersedia. Latih model terlebih dahulu.")
 
-    # ── MobileNetV2 (Keras .h5) ──
-    whole_probs = None
-    if _mobile_available() and _tf_available:
+    # ── MobileNetV2 (Keras .h5) — hanya spesies pada area yang terdeteksi ──
+    if crop_probs and _mobile_available() and _tf_available:
         try:
-            # Probabilitas seluruh gambar: dipakai untuk memastikan dinding bersih.
-            whole_probs = run_mobile_inference(img_bgr)
-            resp["mobilenet"] = run_mobile_inference(img_bgr, crop_probs=crop_probs)
-            if resp["annotated_image"] is None:
-                resp["annotated_image"] = original_b64
+            resp["mobilenet"] = run_mobile_inference(crop_probs)
         except Exception as exc:
             log.exception("MobileNet inference error")
             resp["error_details"].append(f"MobileNetV2: {exc}")
-    else:
-        if not _tf_available:
-            resp["error_details"].append("TensorFlow tidak terinstal.")
-        else:
-            resp["error_details"].append("Model MobileNetV2 belum tersedia. Latih model terlebih dahulu.")
+    elif not _tf_available:
+        resp["error_details"].append("TensorFlow tidak terinstal.")
+    elif not _mobile_available():
+        resp["error_details"].append("Model MobileNetV2 belum tersedia. Latih model terlebih dahulu.")
+
+    # Gambar asli tetap ditampilkan walau tanpa anotasi.
+    if resp["annotated_image"] is None:
+        resp["annotated_image"] = original_b64
 
     # ── Tentukan status ──
-    resp["status"] = determine_status(
-        resp.get("yolo"), resp.get("mobilenet"), whole_probs
-    )
+    resp["status"] = determine_status(resp.get("yolo"))
 
     # Jika tidak ada model sama sekali → kembalikan status khusus
     if not _yolo_available() and not _mobile_available():
@@ -410,13 +437,19 @@ def predict():
 
 @app.route("/health")
 def health():
+    classes = _mobile_classes
+    if not classes and MOBILE_LABELS_PATH.exists():
+        try:
+            classes = _read_mobile_labels()
+        except Exception:  # noqa: BLE001 - health check tidak boleh gagal
+            classes = []
     return jsonify({
         "status":           "ok",
         "device":           _device_str,
         "yolo_available":   _yolo_available(),
         "mobile_available": _mobile_available(),
         "mobile_backend":   "keras-tensorflow",
-        "mobile_classes":   _mobile_classes or [],
+        "mobile_classes":   classes or [],
         "yolo_model":       str(YOLO_MODEL_PATH),
         "mobile_model":     str(MOBILE_MODEL_PATH),
     })

@@ -1,48 +1,22 @@
 {
-  "created_at": "2026-10-29T03:50:50",
-  "mode": "train",
-  "args": {
-    "data": "D:\\.CAPSTONE\\dataset\\dataset.yaml",
-    "weights": "yolov8n.pt",
-    "epochs": 120,
-    "imgsz": 512,
-    "batch": 4,
-    "patience": 0,
-    "device": "cpu",
-    "workers": 2,
-    "seed": 0,
-    "optimizer": "AdamW",
-    "lr0": 0.001,
-    "mosaic": 0.0,
-    "close_mosaic": null,
-    "cos_lr": true,
-    "project": "D:\\.CAPSTONE\\runs\\yolo",
-    "name": "train_final_v2",
-    "exist_ok": false,
-    "resume": false,
-    "resume_from": "D:\\.CAPSTONE\\runs\\yolo\\train_run\\weights\\last.pt",
-    "copy_to": "D:\\.CAPSTONE\\yolov8_mold.pt",
-    "no_copy": true,
-    "eval_only": false,
-    "eval_weights": "D:\\.CAPSTONE\\yolov8_mold.pt",
-    "split": "test"
+  "val": {
+    "precision": 0.4978,
+    "recall": 0.2809,
+    "mAP50": 0.2881,
+    "mAP50_95": 0.1297
   },
-  "device": "cpu",
-  "dataset_counts": {
-    "train": 72,
-    "val": 18,
-    "test": 0
+  "test": {
+    "precision": 0.3644,
+    "recall": 0.253,
+    "mAP50": 0.2126,
+    "mAP50_95": 0.0893
   },
-  "versions": {
-    "python": "3.10.0",
-    "torch": "2.12.0+cpu",
-    "ultralytics": "8.4.67"
+  "clean_wall": {
+    "images": 43,
+    "flagged_images": 0,
+    "total_boxes": 0,
+    "conf_threshold": 0.35
   },
-  "best_weights": "D:\\.CAPSTONE\\runs\\yolo\\train_final_v2\\weights\\best.pt",
-  "metrics": {
-    "precision": 0.938523378580654,
-    "recall": 1.0,
-    "mAP50": 0.995,
-    "mAP50_95": 0.6414385822510823
-  }
+  "promoted_at": "2026-10-29T11:58:40",
+  "candidate": "results\\yolo\\train\\weights\\best.pt"
 }

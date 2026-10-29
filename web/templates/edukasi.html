@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% set page = "edukasi" %}
+{% set page_title = "Tips & Edukasi" %}
+{% set page_subtitle = "Panduan menjaga rumah tetap kering dan sehat" %}
+{% block title %}Tips &amp; Edukasi{% endblock %}
+
+{% block content %}
+<section class="page-head page-head--split">
+  <div class="page-head__lead">
+    <h1 class="page-title">Tips &amp; Edukasi</h1>
+    <p class="lead">Artikel singkat berbasis panduan kesehatan dan kebersihan rumah. Bukan pengganti nasihat medis profesional.</p>
+  </div>
+  <a class="btn btn--secondary btn--sm" href="{{ url_for('deteksi') }}">{{ icon('scan', 16) }} Deteksi Jamur</a>
+</section>
+
+<div class="edu-toolbar">
+  <div class="search-field search-field--lg">
+    {{ icon('search', 18, 'search-field__icon') }}
+    <label class="sr-only" for="edu-search">Cari artikel</label>
+    <input id="edu-search" type="search" placeholder="Cari artikel, misalnya “ventilasi”…" autocomplete="off" />
+  </div>
+  <div class="filter-pills filter-pills--scroll" role="group" aria-label="Filter kategori artikel">
+    {% for category in categories %}
+      <button class="pill {{ 'is-active' if loop.first }}" type="button" data-category="{{ category }}" aria-pressed="{{ 'true' if loop.first else 'false' }}">
+        {{ category }}
+      </button>
+    {% endfor %}
+  </div>
+</div>
+
+<a class="edu-feature" href="{{ url_for('edukasi_detail', slug=featured.slug) }}" id="edu-featured">
+  <span class="edu-feature__art" aria-hidden="true">
+    <span class="edu-feature__orb edu-feature__orb--a"></span>
+    <span class="edu-feature__orb edu-feature__orb--b"></span>
+    {{ icon(featured.icon, 84) }}
+  </span>
+  <span class="edu-feature__body">
+    <span class="badge badge--light">{{ icon('sparkles', 13) }} Artikel unggulan</span>
+    <span class="edu-feature__title">{{ featured.title }}</span>
+    <span class="edu-feature__text">{{ featured.excerpt }}</span>
+    <span class="edu-feature__meta">
+      <span>{{ featured.category }}</span>
+      <span>{{ icon('clock', 14) }} {{ featured.minutes }} menit baca</span>
+    </span>
+    <span class="btn btn--light btn--sm">Baca Selengkapnya {{ icon('arrow-right', 15) }}</span>
+  </span>
+</a>
+
+<section aria-labelledby="edu-list-title">
+  <div class="section-head">
+    <h2 class="section-title" id="edu-list-title">Semua Artikel</h2>
+    <p class="muted-small" id="edu-count">{{ articles|length }} artikel</p>
+  </div>
+
+  <div class="article-grid" id="article-grid">
+    {% for article in articles %}
+      <a class="article-card" href="{{ url_for('edukasi_detail', slug=article.slug) }}"
+         data-slug="{{ article.slug }}"
+         data-category="{{ article.category }}"
+         data-search="{{ (article.title ~ ' ' ~ article.excerpt ~ ' ' ~ article.category)|lower }}">
+        <span class="article-card__media tone-{{ loop.index0 % 4 }}" aria-hidden="true">
+          {{ icon(article.icon, 42) }}
+          <span class="article-card__minutes">{{ icon('clock', 13) }} {{ article.minutes }} menit</span>
+        </span>
+        <span class="article-card__body">
+          <span class="badge badge--soft">{{ article.category }}</span>
+          <span class="article-card__title">{{ article.title }}</span>
+          <span class="article-card__excerpt">{{ article.excerpt }}</span>
+          <span class="link-arrow">Baca Artikel {{ icon('arrow-right', 15) }}</span>
+        </span>
+      </a>
+    {% endfor %}
+  </div>
+
+  <div class="empty-state empty-state--page" id="edu-empty" hidden>
+    <span class="empty-state__icon">{{ icon('search', 28) }}</span>
+    <h3 class="empty-state__title">Artikel tidak ditemukan</h3>
+    <p class="empty-state__text">Coba kata kunci lain atau pilih kategori “Semua”.</p>
+    <button class="btn btn--secondary" type="button" id="edu-reset">Reset pencarian</button>
+  </div>
+</section>
+
+<section class="card card--mint disclaimer-card">
+  <span class="tile tile--mint">{{ icon('heart', 20) }}</span>
+  <div>
+    <h2 class="card-title">Informasi, bukan diagnosis</h2>
+    <p class="muted">MoldGuard menyediakan edukasi umum tentang kelembapan dan kebersihan rumah. Jika Anda atau keluarga mengalami keluhan kesehatan, konsultasikan dengan tenaga kesehatan.</p>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/edukasi.js') }}"></script>
+{% endblock %}

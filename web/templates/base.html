@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>{% block title %}{{ page_title|default('MoldGuard') }} — MoldGuard{% endblock %}</title>
+  <meta name="description" content="{% block description %}MoldGuard membantu Anda memeriksa indikasi jamur pada permukaan bangunan melalui foto, mengelola riwayat pemeriksaan, dan menjaga rumah tetap sehat.{% endblock %}" />
+  <meta name="theme-color" content="#064e3b" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages2.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}" />
+  <script>
+    // Terapkan tema tersimpan sebelum render untuk menghindari kedip.
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem('moldguard.settings') || '{}');
+        var t = s.theme || 'light';
+        var dark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      } catch (e) { document.documentElement.dataset.theme = 'light'; }
+    })();
+  </script>
+</head>
+<body data-page="{{ page|default('dashboard') }}">
+{% include "_sprite.html" %}
+{% from "_icons.html" import icon %}
+
+<a class="skip-link" href="#main">Lewati ke konten utama</a>
+
+<div class="app-canvas" aria-hidden="true">
+  <span class="leaf-blob leaf-blob--1"></span>
+  <span class="leaf-blob leaf-blob--2"></span>
+  <span class="leaf-blob leaf-blob--3"></span>
+</div>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar" aria-label="Navigasi utama">
+    <div class="sidebar-top">
+      <a class="brand" href="{{ url_for('beranda') }}">
+        <span class="brand-mark">{{ icon('logo', 26) }}</span>
+        <span class="brand-text">
+          <span class="brand-name">MoldGuard</span>
+          <span class="brand-tag">Rumah Sehat, Keluarga Lebih Sehat</span>
+        </span>
+      </a>
+    </div>
+
+    <nav class="side-nav" aria-label="Menu aplikasi">
+      <a class="side-link {{ 'is-active' if page == 'dashboard' }}" href="{{ url_for('beranda') }}">
+        {{ icon('home') }}<span>Beranda</span>
+      </a>
+      <a class="side-link {{ 'is-active' if page == 'deteksi' }}" href="{{ url_for('deteksi') }}">
+        {{ icon('scan') }}<span>Deteksi Jamur</span>
+      </a>
+      <a class="side-link {{ 'is-active' if page == 'riwayat' }}" href="{{ url_for('riwayat') }}">
+        {{ icon('history') }}<span>Riwayat</span>
+      </a>
+      <a class="side-link {{ 'is-active' if page == 'laporan' }}" href="{{ url_for('laporan') }}">
+        {{ icon('file') }}<span>Laporan</span>
+      </a>
+      <a class="side-link {{ 'is-active' if page == 'edukasi' }}" href="{{ url_for('edukasi') }}">
+        {{ icon('lightbulb') }}<span>Tips &amp; Edukasi</span>
+      </a>
+      <a class="side-link {{ 'is-active' if page == 'pengingat' }}" href="{{ url_for('pengingat') }}">
+        {{ icon('bell') }}<span>Pengingat</span>
+      </a>
+      <a class="side-link {{ 'is-active' if page == 'profil' }}" href="{{ url_for('profil') }}">
+        {{ icon('user') }}<span>Profil</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="sidebar-promo">
+        <span class="sidebar-promo__leaf" aria-hidden="true">{{ icon('leaf', 44) }}</span>
+        <p class="sidebar-promo__title">Lingkungan bersih untuk hidup lebih sehat</p>
+        <p class="sidebar-promo__text">Cegah jamur sejak dini bersama MoldGuard.</p>
+      </div>
+
+      <div class="sidebar-help">
+        <span class="sidebar-help__icon">{{ icon('help', 18) }}</span>
+        <div>
+          <p class="sidebar-help__title">Butuh Bantuan?</p>
+          <p class="sidebar-help__text">Pusat bantuan &amp; panduan penggunaan aplikasi.</p>
+          <a class="link-arrow" href="{{ url_for('tentang') }}#bantuan">Lihat Bantuan {{ icon('arrow-right', 15) }}</a>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <button class="drawer-scrim" id="drawer-scrim" type="button" aria-label="Tutup menu" tabindex="-1"></button>
+
+  <div class="workspace">
+    <header class="topbar">
+      <button class="icon-btn drawer-toggle" id="drawer-toggle" type="button" aria-label="Buka menu" aria-expanded="false" aria-controls="sidebar">
+        {{ icon('menu') }}
+      </button>
+
+      {% if back_url is defined and back_url %}
+        <a class="back-link" href="{{ back_url }}" aria-label="Kembali">
+          {{ icon('arrow-left', 20) }}
+        </a>
+      {% endif %}
+
+      <a class="topbar-brand" href="{{ url_for('beranda') }}">
+        <span class="topbar-brand__mark">{{ icon('logo', 20) }}</span>
+        <span>MoldGuard</span>
+      </a>
+
+      <div class="topbar-heading">
+        <p class="topbar-heading__title">{{ page_title|default('Beranda') }}</p>
+        <p class="topbar-heading__sub">{{ page_subtitle|default('') }}</p>
+      </div>
+
+      <div class="topbar-actions">
+        <form class="topbar-search" action="{{ url_for('riwayat') }}" method="get" role="search">
+          <label class="sr-only" for="global-search">Cari riwayat, artikel, atau tips</label>
+          <span class="topbar-search__icon">{{ icon('search', 18) }}</span>
+          <input id="global-search" name="q" type="search" placeholder="Cari riwayat, artikel, atau tips…" autocomplete="off" />
+        </form>
+
+        <a class="icon-btn icon-btn--ghost icon-btn--settings" href="{{ url_for('pengaturan') }}" aria-label="Pengaturan">
+          {{ icon('settings', 19) }}
+        </a>
+
+        <div class="popover-wrap">
+          <button class="icon-btn icon-btn--ghost" id="btn-notifications" type="button" aria-label="Notifikasi" aria-expanded="false" aria-controls="notif-panel">
+            {{ icon('bell', 19) }}
+            <span class="notif-dot" id="notif-dot" hidden></span>
+          </button>
+          <div class="popover" id="notif-panel" role="dialog" aria-label="Notifikasi" hidden>
+            <div class="popover__head">
+              <strong>Notifikasi</strong>
+              <a class="link-arrow" href="{{ url_for('riwayat') }}">Riwayat</a>
+            </div>
+            <div class="popover__body" id="notif-list">
+              <p class="muted-small">Belum ada aktivitas.</p>
+            </div>
+          </div>
+        </div>
+
+        <a class="avatar" id="topbar-avatar" href="{{ url_for('profil') }}" aria-label="Buka profil">P</a>
+      </div>
+    </header>
+
+    <main id="main" class="page" tabindex="-1">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="page-footer">
+      <p>MoldGuard &copy; 2026 — Proyek Capstone Informatika.</p>
+      <p>Hasil AI adalah indikasi visual, bukan diagnosis profesional.</p>
+    </footer>
+  </div>
+</div>
+
+<nav class="bottom-nav" aria-label="Navigasi bawah">
+  <a class="bottom-link {{ 'is-active' if page == 'dashboard' }}" href="{{ url_for('beranda') }}">
+    {{ icon('home', 21) }}<span>Beranda</span>
+  </a>
+  <a class="bottom-link {{ 'is-active' if page == 'deteksi' }}" href="{{ url_for('deteksi') }}">
+    {{ icon('scan', 21) }}<span>Deteksi</span>
+  </a>
+  <a class="bottom-link {{ 'is-active' if page == 'laporan' }}" href="{{ url_for('laporan') }}">
+    {{ icon('file', 21) }}<span>Laporan</span>
+  </a>
+  <a class="bottom-link {{ 'is-active' if page == 'edukasi' }}" href="{{ url_for('edukasi') }}">
+    {{ icon('lightbulb', 21) }}<span>Tips</span>
+  </a>
+  <a class="bottom-link {{ 'is-active' if page == 'profil' }}" href="{{ url_for('profil') }}">
+    {{ icon('user', 21) }}<span>Profil</span>
+  </a>
+</nav>
+
+<div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="true"></div>
+<div id="modal-root"></div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

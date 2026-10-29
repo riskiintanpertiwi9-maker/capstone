@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% set page = "pengingat" %}
+{% set page_title = "Pengingat" %}
+{% set page_subtitle = "Agenda perawatan rumah Anda" %}
+{% block title %}Pengingat{% endblock %}
+
+{% block content %}
+<section class="page-head page-head--split">
+  <div class="page-head__lead">
+    <h1 class="page-title">Pengingat</h1>
+    <p class="lead">Atur jadwal perawatan rumah agar area rawan lembap tidak terlewat.</p>
+  </div>
+  <button class="btn btn--primary" id="btn-add-reminder" type="button">{{ icon('plus', 17) }} Tambah Pengingat</button>
+</section>
+
+<div class="alert alert--info" role="note">
+  {{ icon('info', 18) }}
+  <div>
+    <strong>Pengingat berjalan di dalam aplikasi.</strong>
+    <p>MoldGuard belum mengirim notifikasi push saat situs ditutup. Buka halaman ini atau Beranda untuk melihat agenda berikutnya.</p>
+  </div>
+</div>
+
+<div class="reminder-layout">
+  <div class="stack">
+    <section class="card" aria-labelledby="reminder-list-title">
+      <div class="card-head">
+        <div>
+          <h2 class="card-title" id="reminder-list-title">Jadwal Perawatan</h2>
+          <p class="card-sub">Data dibuat oleh Anda dan hanya tersimpan di perangkat ini.</p>
+        </div>
+        <span class="badge badge--neutral" id="reminder-count">0 pengingat</span>
+      </div>
+      <div class="reminder-list" id="reminder-list"></div>
+    </section>
+
+    <section class="card" aria-labelledby="suggestions-title">
+      <div class="card-head">
+        <div>
+          <h2 class="card-title" id="suggestions-title">Template Pengingat</h2>
+          <p class="card-sub">Pilih contoh, lalu sesuaikan jadwalnya. Tidak ditambahkan otomatis.</p>
+        </div>
+        <span class="tile tile--mint">{{ icon('sparkles', 18) }}</span>
+      </div>
+      <div class="suggestion-grid" id="suggestion-grid"></div>
+    </section>
+  </div>
+
+  <aside class="stack">
+    <section class="card calendar-card" aria-labelledby="cal-title">
+      <div class="calendar-head">
+        <button class="icon-btn icon-btn--ghost" id="cal-prev" type="button" aria-label="Bulan sebelumnya">{{ icon('chevron-left', 18) }}</button>
+        <h2 class="card-title" id="cal-title">—</h2>
+        <button class="icon-btn icon-btn--ghost" id="cal-next" type="button" aria-label="Bulan berikutnya">{{ icon('chevron-right', 18) }}</button>
+      </div>
+      <div class="calendar-weekdays" aria-hidden="true">
+        <span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span><span>Min</span>
+      </div>
+      <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Kalender pengingat"></div>
+      <p class="card-note" id="cal-note">{{ icon('calendar', 14) }} <span>Titik menandai tanggal pengingat berikutnya.</span></p>
+    </section>
+
+    <section class="card" aria-labelledby="upcoming-title">
+      <div class="card-head">
+        <h2 class="card-title" id="upcoming-title">Agenda Mendatang</h2>
+      </div>
+      <div class="timeline" id="upcoming-list"></div>
+    </section>
+  </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/reminders.js') }}"></script>
+{% endblock %}
